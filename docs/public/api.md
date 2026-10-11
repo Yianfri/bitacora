@@ -1,8 +1,13 @@
 # Contrato de la API: primera entrega
 
-ASP.NET Core y SQLite. API separada del frontend; las pantallas todavía no la
+ASP.NET Core .NET 10, EF Core 10 y SQLite. API separada del frontend; las pantallas todavía no la
 consumen. Copias privadas completas por usuario, sin sincronización automática.
 El formato de respaldo v1 y los identificadores existentes se conservan.
+
+Endpoints en Features/Authentication y Features/Trips. DTO HTTP en Dtos dentro de
+cada función; entidades persistidas en Persistence/Entities. El cuerpo del respaldo
+es JsonElement validado para conservar campos desconocidos. Esquema versionado en
+Persistence/Migrations y __EFMigrationsHistory; ver [migraciones](migraciones.md).
 
 ## Sesión
 

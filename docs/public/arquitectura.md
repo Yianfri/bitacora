@@ -1,7 +1,7 @@
 # Arquitectura implementada
 
 Frontend Angular 22.2.2 standalone, TypeScript estricto y PWA mediante Angular
-Service Worker. Backend ASP.NET Core .NET 10 con SQLite como servicio separado;
+Service Worker. Backend ASP.NET Core .NET 10 con EF Core 10 y SQLite como servicio separado;
 Angular todavía no consume la API y no hay sincronización automática.
 
 El componente raíz coordina carga, selección del día, importación y navegación.
@@ -34,9 +34,13 @@ respaldo conserva su identificador histórico para mantener compatibilidad.
 
 ## Servicio de copias privadas
 
-`backend/src/Bitacora.Api/Features` define sesiones y endpoints de copias;
+`backend/src/Bitacora.Api/Features/Authentication` y `Features/Trips` definen endpoints,
+con DTO separados en Dtos dentro de cada función;
 `Domain/BackupValidator` valida el respaldo v1 y su integridad sin modificarlo.
-`Storage` maneja SQLite, cuentas, sesiones revocables y transacciones.
+`Storage` usa LINQ de EF para cuentas, sesiones revocables y transacciones.
+`Persistence` configura el DbContext y sus entidades; `Persistence/Migrations`
+contiene migraciones y snapshot versionados. Ver [migraciones](migraciones.md)
+y [convenciones](convenciones-codigo.md). Cada operación usa un contexto propio.
 
 Las tablas users y sessions protegen el acceso. trip_copies conserva el JSON
 validado completo, propietario, revisión y momento de guardado. Se conserva el

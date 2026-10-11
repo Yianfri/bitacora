@@ -6,7 +6,8 @@ import { addNote } from './diary';
 import { sha256, validateBackup, validateData } from './validation';
 import { TripRepository } from '../storage/trip-repository';
 
-const seed: Backup = JSON.parse(readFileSync('public/seed.json', 'utf8'));
+const seedInput: unknown = JSON.parse(readFileSync('public/seed.json', 'utf8'));
+const seed: Backup = await validateBackup(seedInput);
 const source = (backup: Backup) => backup.data.sourceSnapshots[0].files[0];
 
 describe('Recursos y procedencia de respaldos', () => {

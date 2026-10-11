@@ -118,9 +118,13 @@ export class NoteForm implements OnInit {
     this.km = input.cyclingKm;
     this.text = input.text;
     try {
-      const draft = JSON.parse(localStorage.getItem(this.key()) ?? 'null');
+      const draft: unknown = JSON.parse(localStorage.getItem(this.key()) ?? 'null');
       if (
         draft &&
+        typeof draft === 'object' &&
+        'date' in draft &&
+        'text' in draft &&
+        'km' in draft &&
         typeof draft.date === 'string' &&
         typeof draft.text === 'string' &&
         (draft.km === null || typeof draft.km === 'number') &&

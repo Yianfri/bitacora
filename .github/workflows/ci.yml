@@ -25,7 +25,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run format:check
-      - run: npx prettier --check ../backend/tests/*.mjs ../backend/package.json ../global.json
+      - run: npx prettier --check ../backend/tests/*.mjs ../backend/package.json ../global.json ../dotnet-tools.json
       - run: npm run lint
       - run: npm run typecheck:tests
       - run: npm test
@@ -65,9 +65,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24.19.0'
-      - run: dotnet restore src/Bitacora.Api/Bitacora.Api.csproj --locked-mode
-      - run: dotnet format src/Bitacora.Api/Bitacora.Api.csproj --verify-no-changes --no-restore
+      - run: node ../frontend/tools/prepare-seed.mjs
+      - run: dotnet tool restore
+      - run: dotnet restore Bitacora.slnx --locked-mode
+      - run: dotnet format Bitacora.slnx --verify-no-changes --no-restore
       - run: npm run build
+      - run: npm run check:migrations
+      - run: npm run test:unit
       - run: npm test
   image:
     needs: [checks, backend]

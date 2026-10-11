@@ -8,6 +8,10 @@
 - TypeScript y templates estrictos. Datos externos entran como `unknown` y
   se validan con Zod más integridad y vínculos. No usar `any` o conversiones
   para silenciar errores ni confiar en el tipo declarado de un JSON.
+- ESLint usa información de tipos en archivos TypeScript y rechaza acceso inseguro,
+  promesas sin manejar y callbacks async donde se espera void. JSON.parse entra
+  como unknown; validar antes de usar propiedades. Pruebas locales privadas quedan
+  fuera de las comprobaciones estándar y de Git.
 - Signals para estado de pantalla; cálculos derivados con `computed`.
   No guardar el ordinal, bloque visible o kilometraje total como otra fuente de verdad.
 - Nota literal mediante interpolación; nunca `innerHTML`. URL externa validada;

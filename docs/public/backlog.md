@@ -14,7 +14,7 @@
 - CI remoto comprobado: formato, código, tipos, 17 pruebas de dominio, 6 recorridos
   en Chromium, compilación, revisión de publicación, construcción Docker y salud HTTP.
   [Ejecución aprobada de la versión 1565bcf](https://github.com/Yianfri/bitacora/actions/runs/38162052646).
-- Publicación de imagen y despliegue al servidor preparados y desactivados.
+- Publicación de imagen preparada y desactivada; despliegue al servidor pendiente.
 - Backend ASP.NET Core .NET 10 y SQLite: cuentas administrativas, sesiones
   revocables, antiforgery, aislamiento por usuario, listado y guardado/recuperación
   de copias completas con control de revisión. Angular todavía no lo consume.
@@ -39,7 +39,19 @@
   La revisión independiente del parche no encontró un bypass ni una regresión concreta.
   El ensayo Nginx de esta corrección se ejecuta en GitHub; Docker local no está activo.
 
-## Pendiente
+## Mantenibilidad y preparación local
+
+- EF Core 10.0.8 con LINQ, entidades separadas, migraciones/snapshot y adopción
+  controlada del esquema previo, sin recrear sus cuentas, sesiones o copias.
+- Endpoints por función y DTO separados. Convenciones de código/comentarios,
+  formato C#, analizadores .NET y ESLint con información de tipos.
+- 18 pruebas .NET (unitarias de dominio e integración de migraciones), además de
+  15 HTTP, 23 de dominio frontend y los recorridos PWA existentes.
+- Producción requiere migraciones previas; CI comprueba modelo sin cambios pendientes.
+- Acceso privado con Tailscale Serve y actualizador pull propuestos; se retira el
+  workflow de ejecutor personal en el repositorio público. No conectados al servidor.
+
+## Entregas pendientes
 
 Diseño aprobado guardado en main. API implementada como servicio separado;
 integración con las pantallas pendiente.

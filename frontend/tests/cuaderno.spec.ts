@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { validateBackup } from '../src/app/core/domain/validation';
 
 async function importPlan(page: import('@playwright/test').Page) {
   await page.goto('/');
@@ -40,7 +41,8 @@ test('nota, borrador, edición, reimportación y restauración con revisión', a
   await page.getByRole('button', { name: 'Guardar en este dispositivo' }).click();
   const downloaded = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar respaldo', exact: true }).click();
-  const backup = JSON.parse(await readFile((await (await downloaded).path()) as string, 'utf8'));
+  const backupInput: unknown = JSON.parse(await readFile(await (await downloaded).path(), 'utf8'));
+  const backup = await validateBackup(backupInput);
   expect(backup.data.actualDays).toHaveLength(1);
   expect(backup.data.actualDays[0].cyclingKm).toBe(43.2);
   expect(backup.data.diaryEntries).toHaveLength(2);

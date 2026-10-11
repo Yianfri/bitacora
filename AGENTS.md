@@ -12,8 +12,11 @@ Para la API .NET/SQLite, leer `backend/AGENTS.md` y `docs/public/api.md`.
 - Formatos y estilo común: `frontend/src/app/shared/`, `frontend/src/tokens.css`.
 - Pruebas de dominio junto al código; navegador en `frontend/tests/`.
 - Arquitectura, privacidad y despliegue: `docs/public/`.
-- API por función: `backend/src/Bitacora.Api/Features/`; validación en `Domain/`
-  y almacenamiento en `Storage/`. Pruebas HTTP/SQLite real en `backend/tests/`.
+- API por función: `backend/src/Bitacora.Api/Features/Authentication/` y `Features/Trips/`.
+- Reglas en `Domain/`, persistencia de casos de uso en `Storage/`, contexto/entidades
+  EF en `Persistence/` y migraciones en `Persistence/Migrations/`.
+- Pruebas unitarias .NET y migraciones en `backend/tests/Bitacora.Api.Tests/`;
+  HTTP/SQLite real en `backend/tests/api.test.mjs`.
 - `docs/public/backlog.md` registra el estado de implementación pública.
 
 ## Datos y publicación
@@ -40,9 +43,10 @@ Para la API .NET/SQLite, leer `backend/AGENTS.md` y `docs/public/api.md`.
 Desde frontend: npm ci, npm run format:check, npm run lint,
 npm run typecheck:tests, npm test, npm run build, npm run test:e2e,
 npm run check:publication. Para PWA usar build y preview.
-Backend: restauración con lockfile, `dotnet format --verify-no-changes`, compilación
+Backend: restaurar herramientas locales y solución con lockfiles, `dotnet format --verify-no-changes`, compilación
 sin warnings y `node --test --test-concurrency=1 backend/tests/api.test.mjs` desde
-la raíz. Ver comandos completos en `backend/README.md`.
+la raíz, `dotnet test` y comprobar migraciones pendientes del modelo.
+Ver comandos completos en `backend/README.md`.
 
 Implementar funciones completas, sin capas o backend vacíos. Probar pérdida de red,
 restauración, concurrencia y datos inválidos. No afirmar pruebas físicas de Android,
