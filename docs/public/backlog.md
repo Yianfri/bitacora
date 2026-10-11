@@ -20,7 +20,11 @@
   de copias completas con control de revisión. Angular todavía no lo consume.
 - Verificación local del backend: compilación sin warnings y 13 pruebas HTTP
   contra SQLite real, incluidos datos inválidos, concurrencia, reinicio y logout.
-- Job de CI del backend agregado; su ejecución remota aún debe comprobarse.
+- CI del backend y frontend aprobado para 9e3a78b: formato, compilación y 13
+  pruebas de API en Linux, más los recorridos PWA y comprobación Docker existentes.
+  [Ejecución aprobada](https://github.com/Yianfri/bitacora/actions/runs/38168967249).
+  Código disponible para revisión en [PR 1](https://github.com/Yianfri/bitacora/pull/1);
+  aún no fusionado en main.
 
 ## Pendiente
 
