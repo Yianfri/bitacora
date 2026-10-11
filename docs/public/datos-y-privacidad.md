@@ -8,9 +8,11 @@ No añadir un plan personal a código, pruebas, capturas, README ni ejemplos.
 | --- | --- | --- |
 | Código, documentación técnica y demo ficticia | Git y compilación | A GitHub al subir código. |
 | Fuentes y planificación privada de una instalación | Archivos locales excluidos | No por el proyecto. |
-| Viaje importado, jornadas y notas | IndexedDB del navegador | No; no existe API de sincronización. |
+| Viaje importado, jornadas y notas | IndexedDB del navegador | No; Angular aún no consume la API. |
 | Borrador de una nota | localStorage del navegador | No. |
 | Respaldo exportado | Descarga elegida por el usuario | No por el proyecto. |
+| Copias enviadas explícitamente a la API | SQLite privado | Solo mediante petición autenticada; aún no hay acción de envío en Angular. |
+| Cuentas, hashes de contraseña, sesiones y claves de cookies | Directorio privado del backend | Permanecen en la instalación de la API, fuera de Git e imágenes. |
 
 Un archivo propio se selecciona en **Traer un respaldo** o **Restaurar respaldo**.
 Se lee con File.text, se valida y se revisa antes de guardar. La selección del
@@ -31,6 +33,12 @@ conocidos de información personal/credenciales y compara la semilla compilada
 con la demo. Es una ayuda, no una garantía contra cualquier dato sensible.
 Revisar también cambios e historial antes de publicar.
 
-Antes de añadir una API se diseñarán autenticación, autorización por usuario,
-respaldo, sincronización y conflictos. Publicar el código no habilita un servidor
-público ni sube el diario del navegador.
+La API incluye autenticación, autorización por usuario, validación de respaldos
+y revisión transaccional para evitar sobrescrituras. Su contrato se documenta
+en [API](api.md). Publicar el código no habilita un servidor público ni sube el
+diario del navegador. La integración y sincronización entre dispositivos siguen
+pendientes; cualquier recuperación local debe revisarse antes de reemplazar.
+
+SQLite y las claves persistentes de Data Protection no tienen cifrado específico
+en disco. El directorio requiere permisos privados y un respaldo protegido. No
+incorporar bases, claves, cookies o archivos enviados a imágenes ni artefactos CI.

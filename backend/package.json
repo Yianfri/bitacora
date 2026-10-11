@@ -1,0 +1,12 @@
+{
+  "name": "bitacora-api-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "dotnet build src/Bitacora.Api/Bitacora.Api.csproj --no-restore",
+    "test": "node --test --test-concurrency=1 tests/api.test.mjs"
+  },
+  "engines": {
+    "node": ">=24.15.0 <25"
+  }
+}

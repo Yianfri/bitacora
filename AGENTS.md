@@ -2,6 +2,7 @@
 
 Angular/PWA para planificar viajes y registrar un diario local. Leer
 `frontend/AGENTS.md` antes de editar la aplicación.
+Para la API .NET/SQLite, leer `backend/AGENTS.md` y `docs/public/api.md`.
 
 ## Orientación
 
@@ -11,6 +12,8 @@ Angular/PWA para planificar viajes y registrar un diario local. Leer
 - Formatos y estilo común: `frontend/src/app/shared/`, `frontend/src/tokens.css`.
 - Pruebas de dominio junto al código; navegador en `frontend/tests/`.
 - Arquitectura, privacidad y despliegue: `docs/public/`.
+- API por función: `backend/src/Bitacora.Api/Features/`; validación en `Domain/`
+  y almacenamiento en `Storage/`. Pruebas HTTP/SQLite real en `backend/tests/`.
 - `docs/public/backlog.md` registra el estado de implementación pública.
 
 ## Datos y publicación
@@ -37,6 +40,9 @@ Angular/PWA para planificar viajes y registrar un diario local. Leer
 Desde frontend: npm ci, npm run format:check, npm run lint,
 npm run typecheck:tests, npm test, npm run build, npm run test:e2e,
 npm run check:publication. Para PWA usar build y preview.
+Backend: restauración con lockfile, `dotnet format --verify-no-changes`, compilación
+sin warnings y `node --test --test-concurrency=1 backend/tests/api.test.mjs` desde
+la raíz. Ver comandos completos en `backend/README.md`.
 
 Implementar funciones completas, sin capas o backend vacíos. Probar pérdida de red,
 restauración, concurrencia y datos inválidos. No afirmar pruebas físicas de Android,

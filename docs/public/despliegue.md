@@ -7,6 +7,10 @@ traslada el diario: los respaldos son archivos independientes y privados.
 CI instala el lockfile, comprueba formato/código/tipos, ejecuta pruebas de dominio,
 compila, revisa el contenido publicable y prueba Chromium. Construye Docker,
 comprueba Nginx y solicita `/health` y `/`. Ejecuta en GitHub, no en el Linux personal.
+Un segundo trabajo restaura .NET con lockfile, verifica formato, compila y prueba
+la API contra SQLite temporal y datos ficticios. La receta Docker actual continúa
+sirviendo el frontend; incluir la API, su volumen privado y proxy HTTPS es otra
+entrega que requiere revisar el destino.
 
 ## Ensayo con Docker
 

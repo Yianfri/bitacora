@@ -29,6 +29,7 @@ const rootFiles = new Set([
   'AGENTS.md',
   'README.md',
   'Dockerfile',
+  'global.json',
 ]);
 const allowed = (path) =>
   rootFiles.has(path) ||
@@ -40,6 +41,11 @@ const allowed = (path) =>
   ) ||
   /^frontend\/(AGENTS\.md|README\.md|[\w.-]+\.(json|ts|mjs))$/.test(path) ||
   /^docs\/public\/[\w-]+\.md$/.test(path) ||
+  /^backend\/(AGENTS\.md|README\.md|package\.json|tests\/api\.test\.mjs)$/.test(path) ||
+  /^backend\/src\/Bitacora\.Api\/(?:(?:Domain|Features|Storage)\/)?[\w.-]+\.(?:cs|csproj)$/.test(
+    path,
+  ) ||
+  path === 'backend/src/Bitacora.Api/packages.lock.json' ||
   /^deploy\/(compose(\.local)?\.ya?ml|nginx\.conf|update\.sh|\.env\.example)$/.test(path) ||
   /^\.github\/workflows\/(ci|deploy)\.yml$/.test(path);
 for (const path of files) {
