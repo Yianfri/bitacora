@@ -89,9 +89,13 @@ import { dateLabel, money, distance } from '../../shared/display';
       padding: 24px;
       border-top: 1px solid var(--line);
       background: var(--tint);
+      box-shadow: inset 3px 0 var(--accent);
+      animation: reveal 180ms ease-out;
     }
     h3 {
-      font-size: 1.3rem;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.6rem;
       margin: 8px 0;
     }
     h4 {
@@ -104,9 +108,8 @@ import { dateLabel, money, distance } from '../../shared/display';
       gap: 20px;
     }
     .logistics-grid section {
-      background: var(--paper);
-      padding: 16px;
-      border-radius: var(--radius);
+      border-top: 2px solid var(--line);
+      padding: 4px 0 12px;
     }
     .status-tag {
       color: var(--warning-ink);
@@ -118,7 +121,7 @@ import { dateLabel, money, distance } from '../../shared/display';
     }
     summary {
       cursor: pointer;
-      min-height: 28px;
+      min-height: 44px;
     }
     .budget {
       display: grid;
@@ -140,6 +143,9 @@ import { dateLabel, money, distance } from '../../shared/display';
     .note-text {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      line-height: 1.75;
     }
     .hint {
       font-size: 0.85rem;
@@ -151,7 +157,24 @@ import { dateLabel, money, distance } from '../../shared/display';
       white-space: nowrap;
     }
     .diary {
-      padding: 10px 0;
+      padding: 18px;
+      margin: 12px 0;
+      background: var(--paper);
+      border-radius: 8px;
+      border-top: 2px solid var(--brand);
+    }
+    .diary h4 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 400;
+    }
+    @keyframes reveal {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
     @media (max-width: 620px) {
       .detail {

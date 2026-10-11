@@ -6,6 +6,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  border-bottom: 1px solid var(--line);
 }
 .brand {
   display: flex;
@@ -18,8 +19,10 @@
 }
 .brand strong {
   display: block;
-  font-size: 1.35rem;
   letter-spacing: 0.015em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.65rem;
 }
 .brand img {
   object-fit: contain;
@@ -45,13 +48,40 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 28px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-top: 3px solid var(--brand);
+  padding: 28px 32px;
+}
+.overview::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 280px;
+  height: 280px;
+  right: -120px;
+  top: -110px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 20px var(--paper),
+    0 0 0 21px var(--line),
+    0 0 0 44px var(--paper),
+    0 0 0 45px var(--line),
+    0 0 0 70px var(--paper),
+    0 0 0 71px var(--line);
+  opacity: 0.45;
+  pointer-events: none;
 }
 .overview h1 {
   max-width: 380px;
+  margin: 8px 0 12px;
 }
 .route {
   font-weight: 600;
   color: var(--accent);
+  font-size: 1.05rem;
 }
 .stats {
   display: grid;
@@ -62,10 +92,16 @@ main {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
 }
 .stats strong {
-  font-size: 1.7rem;
+  font-size: 2rem;
   white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--accent);
 }
 .stats span {
   font-size: 0.8rem;
@@ -92,6 +128,14 @@ main {
 .page-count {
   padding: 16px 22px;
 }
+.itinerary > .section-top {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+.itinerary h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0;
+}
 .date-select {
   font-size: 0.8rem;
   color: var(--muted);
@@ -115,16 +159,18 @@ main {
   padding: 8px 12px;
 }
 .block-picker .selected {
-  background: var(--active);
+  background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--button-ink);
+  font-weight: 600;
 }
 .page-count {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  background: var(--tint);
+  background: var(--paper);
+  padding-top: 0;
 }
 .page-count p {
   font-size: 0.8rem;
@@ -132,7 +178,7 @@ main {
   margin: 0;
 }
 .page-count button {
-  min-width: 42px;
+  min-width: 44px;
   padding: 8px;
   margin-left: 6px;
 }
@@ -141,7 +187,7 @@ main {
 }
 .day-button {
   display: grid;
-  grid-template-columns: 26px 58px minmax(0, 1fr) 68px 16px;
+  grid-template-columns: 32px 58px minmax(0, 1fr) 68px 16px;
   gap: 12px;
   align-items: center;
   width: 100%;
@@ -150,15 +196,43 @@ main {
   padding: 20px;
   text-align: left;
   background: var(--paper);
+  position: relative;
+}
+.day-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 36px;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
 }
 .day-button:hover,
 .day.open > .day-button {
   background: var(--active);
 }
+.day.open > .day-button {
+  box-shadow: inset 3px 0 var(--accent);
+}
 .ordinal {
   font-size: 0.8rem;
   color: var(--brand);
   font-weight: 700;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--brand);
+  border-radius: 50%;
+  background: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+.day.open .ordinal {
+  color: var(--button-ink);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 .day-date {
   font-size: 0.8rem;
@@ -180,6 +254,12 @@ main {
   text-align: right;
   font-weight: 600;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.day-button > span:last-child {
+  color: var(--accent);
+  font-size: 1.2rem;
 }
 .day-route {
   min-width: 0;
@@ -187,6 +267,10 @@ main {
 }
 .side details {
   margin-top: 20px;
+}
+.side .card {
+  box-shadow: none;
+  background: transparent;
 }
 .side details button {
   margin-top: 8px;
@@ -248,7 +332,7 @@ footer span {
     grid-template-columns: 1fr 1fr;
   }
   .day-button {
-    grid-template-columns: 24px minmax(0, 1fr) 68px 16px;
+    grid-template-columns: 32px minmax(0, 1fr) 68px 16px;
     gap: 10px;
   }
   .day-date {
@@ -280,9 +364,10 @@ footer span {
   }
   .overview {
     display: block;
+    padding: 22px;
   }
   .overview h1 {
-    font-size: 1.7rem;
+    font-size: 2.2rem;
   }
   .stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -294,6 +379,13 @@ footer span {
   }
   .stats span {
     font-size: 0.72rem;
+  }
+  .stats div {
+    padding-left: 10px;
+  }
+  .stats div:first-child {
+    border-left: 0;
+    padding-left: 0;
   }
   .side {
     display: flex;
@@ -309,6 +401,9 @@ footer span {
   .day-button {
     padding: 16px 12px;
     gap: 8px;
+  }
+  .day-button::before {
+    left: 28px;
   }
   .day-route strong {
     font-size: 0.88rem;
