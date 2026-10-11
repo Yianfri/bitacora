@@ -40,6 +40,11 @@ imágenes, artefactos de CI ni copias públicas. En Linux el directorio se crea 
 permisos del propietario. En Windows verificar permisos del usuario del proceso.
 Las claves y el contenido SQLite no tienen cifrado específico en disco.
 
+Cuotas por cuenta: 100 copias y 100 MiB de JSON UTF-8 por defecto, configurables
+con `Storage__MaxTripsPerUser` y `Storage__MaxBackupBytesPerUser` positivos.
+El control es transaccional también para actualizaciones y peticiones simultáneas;
+un rechazo devuelve 409 sin modificar la copia. Ver [contrato](../docs/public/api.md).
+
 Respaldar la base con el proceso detenido y conservar las claves en privado;
 volver a arrancar y comprobar salud. Migración inicial mediante `user_version=1`;
 una versión futura desconocida detiene el arranque sin recrear ni borrar la base.

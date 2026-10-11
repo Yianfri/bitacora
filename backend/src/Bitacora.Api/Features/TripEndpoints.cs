@@ -38,7 +38,10 @@ public static class TripEndpoints
       try { name = BackupValidator.Validate(backup, id); }
       catch (InvalidBackupException exception)
       { return Results.Problem(statusCode: 400, title: "Respaldo inválido.", detail: exception.Message); }
-      var saved = store.Write(Owner(context.User), id, name, backup.GetRawText(), expected);
+      TripMetadata? saved;
+      try { saved = store.Write(Owner(context.User), id, name, backup.GetRawText(), expected); }
+      catch (StorageQuotaExceededException)
+      { return Results.Problem(statusCode: 409, title: "Cuota de copias agotada.", extensions: new Dictionary<string, object?> { ["code"] = "storage_quota_exceeded" }); }
       if (saved is null) return Results.Problem(statusCode: 412, title: "La copia cambió. Recupera su revisión antes de guardar.");
       context.Response.Headers.ETag = Quote(saved.Revision);
       return Results.Json(saved, statusCode: expected is null ? 201 : 200);

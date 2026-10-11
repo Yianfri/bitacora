@@ -1,9 +1,13 @@
+using System.Text;
+
 namespace Bitacora.Api.Storage;
 
 public sealed record TripMetadata(string Id, string Name, long Revision, string UpdatedAt);
 public sealed record StoredTrip(string Backup, long Revision, string UpdatedAt);
+public sealed record StorageLimits(int MaxTripsPerUser, long MaxBackupBytesPerUser);
+public sealed class StorageQuotaExceededException() : Exception("La cuenta alcanzó su cuota de copias.");
 
-public sealed class TripStore(Database database)
+public sealed class TripStore(Database database, StorageLimits limits)
 {
   public IReadOnlyList<TripMetadata> List(string owner)
   {
@@ -39,6 +43,17 @@ public sealed class TripStore(Database database)
     var existing = read.ExecuteScalar();
     if (expected is null ? existing is not null : existing is null || Convert.ToInt64(existing) != expected)
       return null;
+    using var usage = Database.Command(connection,
+        "SELECT COUNT(*), COALESCE(SUM(length(CAST(backup_json AS BLOB))), 0) FROM trip_copies WHERE owner_id = $owner AND trip_id <> $id",
+        ("$owner", owner), ("$id", id));
+    usage.Transaction = transaction;
+    using (var reader = usage.ExecuteReader())
+    {
+      reader.Read();
+      if ((expected is null && reader.GetInt64(0) >= limits.MaxTripsPerUser)
+          || Encoding.UTF8.GetByteCount(backup) > limits.MaxBackupBytesPerUser - reader.GetInt64(1))
+        throw new StorageQuotaExceededException();
+    }
     var revision = expected is null ? 1 : checked(expected.Value + 1);
     var updated = DateTimeOffset.UtcNow.ToString("O");
     var sql = expected is null

@@ -100,6 +100,8 @@ function environment() {
     ASPNETCORE_ENVIRONMENT: "Development",
     ASPNETCORE_URLS: baseUrl,
     Storage__Directory: directory,
+    Storage__MaxTripsPerUser: "3",
+    Storage__MaxBackupBytesPerUser: String(1024 * 1024),
   };
 }
 async function createAccount(username) {
@@ -471,6 +473,133 @@ test("oversized payloads are rejected before changing storage", async () => {
     413,
   );
   assert.equal((await first.request(route)).headers.get("etag"), etag);
+});
+
+function copyWithId(id) {
+  const copy = structuredClone(fixture);
+  copy.data.trip.id = id;
+  for (const name of [
+    "plans",
+    "stages",
+    "plannedDays",
+    "actualDays",
+    "diaryEntries",
+    "places",
+  ])
+    for (const row of copy.data[name]) row.tripId = id;
+  return copy;
+}
+function put(client, body, headers) {
+  return client.request("/api/trips/" + body.data.trip.id, {
+    method: "PUT",
+    body,
+    headers,
+  });
+}
+test("count quota is atomic across distinct concurrent creates; updates and other owners still work", async () => {
+  assert.equal(
+    (await put(first, copyWithId("quota-count-1"), { "If-None-Match": "*" }))
+      .status,
+    201,
+  );
+  const results = await Promise.all(
+    ["quota-count-2", "quota-count-3"].map((id) =>
+      put(first, copyWithId(id), { "If-None-Match": "*" }),
+    ),
+  );
+  assert.deepEqual(results.map((r) => r.status).sort(), [201, 409]);
+  const rejected = await results.find((r) => r.status === 409).json();
+  assert.equal(rejected.code, "storage_quota_exceeded");
+  assert.equal((await (await first.request("/api/trips")).json()).length, 3);
+  const stored = await (await first.request(route)).json();
+  assert.equal((await put(first, stored, { "If-Match": '"1"' })).status, 412);
+  assert.equal((await put(first, stored, { "If-Match": etag })).status, 200);
+  etag = (await first.request(route)).headers.get("etag");
+  assert.deepEqual(await (await first.request(route)).json(), stored);
+  assert.equal(
+    (await put(second, copyWithId("quota-byte-2"), { "If-None-Match": "*" }))
+      .status,
+    201,
+  );
+});
+test("UTF-8 byte quota rejects creation and growth without changing content or revision", async () => {
+  const original = await (await second.request(route)).json();
+  const huge = { ...original, padding: "ñ".repeat(600000) };
+  assert(JSON.stringify(huge).length < 1024 * 1024);
+  assert(Buffer.byteLength(JSON.stringify(huge)) > 1024 * 1024);
+  assert.equal((await put(second, huge, { "If-Match": '"1"' })).status, 409);
+  assert.equal((await put(second, huge, { "If-Match": '"99"' })).status, 412);
+  assert.equal(
+    (
+      await put(
+        second,
+        { ...copyWithId("quota-byte-3"), padding: huge.padding },
+        { "If-None-Match": "*" },
+      )
+    ).status,
+    409,
+  );
+  assert.deepEqual(await (await second.request(route)).json(), original);
+  assert.equal((await second.request(route)).headers.get("etag"), '"1"');
+  const ids = [fixture.data.trip.id, "quota-byte-2"];
+  const before = await Promise.all(
+    ids.map(async (id) => (await second.request("/api/trips/" + id)).json()),
+  );
+  const results = await Promise.all(
+    before.map((body) =>
+      put(
+        second,
+        { ...body, padding: "ñ".repeat(300000) },
+        { "If-Match": '"1"' },
+      ),
+    ),
+  );
+  assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+  let total = 0;
+  for (let i = 0; i < ids.length; i++) {
+    const response = await second.request("/api/trips/" + ids[i]);
+    const text = await response.text();
+    total += Buffer.byteLength(text);
+    if (results[i].status === 409) {
+      assert.equal(response.headers.get("etag"), '"1"');
+      assert.deepEqual(JSON.parse(text), before[i]);
+    }
+  }
+  assert(total <= 1024 * 1024);
+  const winner = results.findIndex((r) => r.status === 200);
+  assert.equal(
+    (await put(second, before[winner], { "If-Match": '"2"' })).status,
+    200,
+  );
+  assert.deepEqual(
+    await (await second.request("/api/trips/" + ids[winner])).json(),
+    before[winner],
+  );
+  const exact = { ...before[winner], padding: "" };
+  exact.padding = "x".repeat(
+    1024 * 1024 -
+      Buffer.byteLength(JSON.stringify(before[1 - winner])) -
+      Buffer.byteLength(JSON.stringify(exact)),
+  );
+  assert.equal((await put(second, exact, { "If-Match": '"3"' })).status, 200);
+  assert.equal(
+    (
+      await put(
+        second,
+        { ...exact, padding: exact.padding + "x" },
+        { "If-Match": '"4"' },
+      )
+    ).status,
+    409,
+  );
+  assert.deepEqual(
+    await (await second.request("/api/trips/" + ids[winner])).json(),
+    exact,
+  );
+  assert.equal(
+    (await put(second, before[winner], { "If-Match": '"4"' })).status,
+    200,
+  );
 });
 test("SQLite copies and existing sessions survive a process restart", async () => {
   const stored = await (await first.request(route)).json();

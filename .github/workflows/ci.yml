@@ -50,6 +50,7 @@ jobs:
           fi
           curl --fail http://127.0.0.1:8088/health
           curl --fail http://127.0.0.1:8088/ > /dev/null
+          node frontend/tools/check-http-security.mjs http://127.0.0.1:8088
   backend:
     runs-on: ubuntu-latest
     timeout-minutes: 10

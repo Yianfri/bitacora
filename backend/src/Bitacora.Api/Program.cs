@@ -18,6 +18,11 @@ builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
 builder.Services.AddProblemDetails();
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 5 * 1024 * 1024);
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.MaxDepth = 64);
+var maxTrips = builder.Configuration.GetValue("Storage:MaxTripsPerUser", 100);
+var maxBackupBytes = builder.Configuration.GetValue("Storage:MaxBackupBytesPerUser", 100L * 1024 * 1024);
+if (maxTrips <= 0 || maxBackupBytes <= 0)
+  throw new InvalidOperationException("Las cuotas de almacenamiento deben ser positivas.");
+builder.Services.AddSingleton(new StorageLimits(maxTrips, maxBackupBytes));
 var database = new Database(builder.Configuration["Storage:Directory"] ?? Path.Combine(builder.Environment.ContentRootPath, ".data"));
 database.Initialize();
 builder.Services.AddSingleton(database);

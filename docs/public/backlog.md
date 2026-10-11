@@ -26,6 +26,19 @@
   Código disponible para revisión en [PR 1](https://github.com/Yianfri/bitacora/pull/1);
   aún no fusionado en main.
 
+### Correcciones de seguridad
+
+- Validación de fuentes indexada una vez por operación, con límites explícitos de
+  tamaño y complejidad; formato v1, texto original y datos locales conservados.
+- Cuotas por cuenta comprobadas en la transacción de guardado, incluyendo bytes
+  UTF-8, actualizaciones y peticiones simultáneas; rechazo 409 sin cambiar la copia.
+- Herencia de cabeceras de seguridad en Nginx y CSP para impedir enmarcado.
+  CI verifica las respuestas de la imagen en HTML, navegación, PWA, salud y errores.
+- Verificación local: 23 pruebas de dominio, 15 pruebas HTTP/SQLite y 6 recorridos
+  PWA en Edge, además de formato, lint, tipos, compilación y revisión de publicación.
+  La revisión independiente del parche no encontró un bypass ni una regresión concreta.
+  El ensayo Nginx de esta corrección se ejecuta en GitHub; Docker local no está activo.
+
 ## Pendiente
 
 Diseño aprobado guardado en main. API implementada como servicio separado;

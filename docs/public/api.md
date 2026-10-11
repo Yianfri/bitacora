@@ -52,6 +52,17 @@ JSON 64. Datos inválidos: 400; cuerpo excesivo: 413. Contención de SQLite: 503
 con Retry-After; no confirmar un guardado fallido. Respuestas de datos y sesión
 usan Cache-Control: no-store.
 
+Cada cuenta puede conservar por defecto 100 copias y 100 MiB de JSON UTF-8 en
+total. `Storage__MaxTripsPerUser` y `Storage__MaxBackupBytesPerUser` permiten
+configurar valores positivos; una configuración inválida impide el arranque.
+La cuota se comprueba después de la revisión y dentro de la misma transacción
+que la escritura, incluyendo actualizaciones que aumenten el tamaño. Exceso:
+409 Problem Details con `code: storage_quota_exceeded`; no cambia contenido,
+revisión ni fecha. Actualizar una copia no consume otra plaza. La cuota es por
+propietario; no sustituye un límite de volumen del servidor. Reducir cuotas no
+borra copias existentes: se pueden leer, pero el resultado de un guardado debe
+caber en la cuota de bytes; nuevas copias requieren también una plaza libre.
+
 ## Límites de esta entrega
 
 La copia del servidor es independiente de IndexedDB. Nada del navegador se
