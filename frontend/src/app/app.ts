@@ -74,7 +74,10 @@ export class App implements OnInit, OnDestroy {
     other: 'Actividad',
   };
   private network = () => this.online.set(navigator.onLine);
-  async ngOnInit() {
+  ngOnInit(): void {
+    void this.initialize();
+  }
+  private async initialize(): Promise<void> {
     window.addEventListener('online', this.network);
     window.addEventListener('offline', this.network);
     this.updates.versionUpdates.subscribe((e) => {

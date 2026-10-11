@@ -1,0 +1,16 @@
+[*.cs]
+indent_size = 4
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+dotnet_diagnostic.IDE0055.severity = warning
+dotnet_diagnostic.IDE0005.severity = suggestion
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_prefer_braces = true:warning
+dotnet_diagnostic.IDE0011.severity = warning
+
+# Generated migrations are checked for model drift rather than editorial style.
+[**/Migrations/*.cs]
+generated_code = true

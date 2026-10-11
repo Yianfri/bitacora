@@ -6,7 +6,8 @@ import { addNote } from './diary';
 import { validateBackup } from './validation';
 import { TripRepository } from '../storage/trip-repository';
 
-const seed: Backup = JSON.parse(readFileSync('public/seed.json', 'utf8'));
+const seedInput: unknown = JSON.parse(readFileSync('public/seed.json', 'utf8'));
+const seed: Backup = await validateBackup(seedInput);
 const note = {
   date: '2030-06-03',
   cyclingKm: 43.2,

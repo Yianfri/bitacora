@@ -25,6 +25,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run format:check
+      - run: npx prettier --check ../backend/tests/*.mjs ../backend/package.json ../global.json ../dotnet-tools.json
       - run: npm run lint
       - run: npm run typecheck:tests
       - run: npm test
@@ -49,8 +50,31 @@ jobs:
           fi
           curl --fail http://127.0.0.1:8088/health
           curl --fail http://127.0.0.1:8088/ > /dev/null
+          node frontend/tools/check-http-security.mjs http://127.0.0.1:8088
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - run: node ../frontend/tools/prepare-seed.mjs
+      - run: dotnet tool restore
+      - run: dotnet restore Bitacora.slnx --locked-mode
+      - run: dotnet format Bitacora.slnx --verify-no-changes --no-restore
+      - run: npm run build
+      - run: npm run check:migrations
+      - run: npm run test:unit
+      - run: npm test
   image:
-    needs: checks
+    needs: [checks, backend]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.ENABLE_IMAGE_PUBLISH == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15

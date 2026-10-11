@@ -26,3 +26,12 @@ frontend/public/seed.json
 frontend/*.tsbuildinfo
 .DS_Store
 Thumbs.db
+bin/
+obj/
+.data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

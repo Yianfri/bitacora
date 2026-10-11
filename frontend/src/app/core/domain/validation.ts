@@ -169,6 +169,52 @@ function unique(values: string[], label: string) {
   ensure(new Set(values).size === values.length, `${label}: identificador o fecha repetida.`);
 }
 
+// Per-call indexes: never trust a cache after source text changes.
+function sourceIndexes(data: TripData): Map<string, Map<string, Set<string>>> {
+  const indexes = new Map<string, Map<string, Set<string>>>();
+  let bytes = 0,
+    nodes = 0;
+  for (const snapshot of data.sourceSnapshots) {
+    const files = new Map<string, Set<string>>();
+    indexes.set(snapshot.id, files);
+    for (const file of snapshot.files) {
+      bytes += new TextEncoder().encode(file.rawText).byteLength;
+      ensure(bytes <= 10 * 1024 * 1024, 'Las fuentes superan el límite de 10 MiB.');
+      let raw: unknown;
+      try {
+        raw = JSON.parse(file.rawText.replace(/^\uFEFF/, ''));
+      } catch {
+        throw new Error('JSON de origen inválido.');
+      }
+      ensure(
+        !!raw && typeof raw === 'object' && 'schema_version' in raw && raw.schema_version === 1,
+        'Versión de origen desconocida.',
+      );
+      const ids = new Set<string>();
+      files.set(file.path, ids);
+      const pending: Iterator<unknown>[] = [[raw].values()];
+      while (pending.length) {
+        const next = pending[pending.length - 1].next();
+        if (next.done) {
+          pending.pop();
+          continue;
+        }
+        ensure(
+          ++nodes <= 1000000 && pending.length <= 64,
+          'Las fuentes superan el límite de complejidad (64 niveles o 1000000 valores).',
+        );
+        const current: unknown = next.value;
+        if (Array.isArray(current)) pending.push(current.values());
+        else if (current && typeof current === 'object') {
+          if ('id' in current && typeof current.id === 'string') ids.add(current.id);
+          pending.push(Object.values(current).values());
+        }
+      }
+    }
+  }
+  return indexes;
+}
+
 export function validateData(value: unknown): TripData {
   const result = schema.shape.data.safeParse(value);
   if (!result.success)
@@ -219,21 +265,12 @@ export function validateData(value: unknown): TripData {
       s.files.map((f) => f.path),
       'Archivos de origen',
     );
+  const sources = sourceIndexes(d);
   for (const r of [...d.stages, ...d.plannedDays, ...d.places])
     if (r.sourceRef) {
-      const file = snapshots
-        .get(r.sourceRef.snapshotId)
-        ?.files.find((f) => f.path === r.sourceRef?.path);
-      ensure(!!file, 'Referencia de fuente inexistente.');
-      const source: unknown = JSON.parse(file.rawText.replace(/^\uFEFF/, ''));
-      // A source ID must exist as an entity ID in the original JSON, not just as arbitrary text.
-      const containsId = (v: unknown): boolean =>
-        Array.isArray(v)
-          ? v.some(containsId)
-          : !!v &&
-            typeof v === 'object' &&
-            (('id' in v && v.id === r.sourceRef?.sourceId) || Object.values(v).some(containsId));
-      ensure(containsId(source), 'El ID de procedencia no existe en la fuente.');
+      const ids = sources.get(r.sourceRef.snapshotId)?.get(r.sourceRef.path);
+      ensure(!!ids, 'Referencia de fuente inexistente.');
+      ensure(ids.has(r.sourceRef.sourceId), 'El ID de procedencia no existe en la fuente.');
     }
   for (const p of d.plannedDays) {
     ensure(plans.has(p.planId), 'Plan inexistente.');
@@ -270,16 +307,6 @@ export async function validateBackup(value: unknown): Promise<Backup> {
       ensure(
         (await sha256(f.rawText)) === f.sha256,
         'La integridad de un archivo de origen no coincide.',
-      );
-      let raw: unknown;
-      try {
-        raw = JSON.parse(f.rawText.replace(/^\uFEFF/, ''));
-      } catch {
-        throw new Error('JSON de origen inválido.');
-      }
-      ensure(
-        !!raw && typeof raw === 'object' && 'schema_version' in raw && raw.schema_version === 1,
-        'Versión de origen desconocida.',
       );
     }
   return backup;

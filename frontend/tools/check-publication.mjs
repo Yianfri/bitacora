@@ -29,17 +29,29 @@ const rootFiles = new Set([
   'AGENTS.md',
   'README.md',
   'Dockerfile',
+  'global.json',
+  'dotnet-tools.json',
 ]);
 const allowed = (path) =>
   rootFiles.has(path) ||
   /^frontend\/(src\/|tools\/|tests\/|public\/(brand\.png|favicon\.ico|manifest\.webmanifest)$)/.test(
     path,
   ) ||
-  /^frontend\/(\.editorconfig|\.gitignore|\.prettierrc|\.vscode\/(extensions|launch|tasks)\.json)$/.test(
+  /^frontend\/(\.editorconfig|\.gitignore|\.prettierignore|\.prettierrc|\.vscode\/(extensions|launch|tasks)\.json)$/.test(
     path,
   ) ||
   /^frontend\/(AGENTS\.md|README\.md|[\w.-]+\.(json|ts|mjs))$/.test(path) ||
   /^docs\/public\/[\w-]+\.md$/.test(path) ||
+  /^backend\/(AGENTS\.md|README\.md|\.editorconfig|Bitacora\.slnx|package\.json|tests\/api\.test\.mjs)$/.test(
+    path,
+  ) ||
+  /^backend\/tests\/Bitacora\.Api\.Tests\/(?:(?:Domain|Persistence)\/)?[\w.-]+\.(?:cs|csproj|json)$/.test(
+    path,
+  ) ||
+  /^backend\/src\/Bitacora\.Api\/(?:(?:Domain|Storage|Features\/(?:Authentication|Trips)(?:\/Dtos)?|Persistence(?:\/(?:Entities|Migrations))?)\/)?[\w.-]+\.(?:cs|csproj)$/.test(
+    path,
+  ) ||
+  path === 'backend/src/Bitacora.Api/packages.lock.json' ||
   /^deploy\/(compose(\.local)?\.ya?ml|nginx\.conf|update\.sh|\.env\.example)$/.test(path) ||
   /^\.github\/workflows\/(ci|deploy)\.yml$/.test(path);
 for (const path of files) {

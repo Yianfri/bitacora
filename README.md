@@ -44,17 +44,26 @@ Instalación en teléfono físico y despliegue en servidor siguen pendientes.
 - `frontend/src/app/features/`: pantallas y componentes de viaje/diario.
 - `frontend/src/app/core/domain/`: contratos, cálculos y validación.
 - `frontend/src/app/core/storage/`: IndexedDB y transacciones.
-- `deploy/`, `Dockerfile`, `.github/workflows/`: contenedor y CI/CD preparado.
+- `backend/src/Bitacora.Api/Features/`: endpoints y DTO de Authentication y Trips.
+- `backend/src/Bitacora.Api/Persistence/`: contexto/entidades EF y migraciones.
+- `backend/tests/Bitacora.Api.Tests/`: unit tests .NET y migraciones SQLite.
+- `deploy/`, `Dockerfile`, `.github/workflows/`: contenedor y comprobaciones CI.
 
 Desde `frontend/`: `npm run format:check`, `npm run lint`, `npm run typecheck:tests`,
 `npm test`, `npm run build` y `npm run test:e2e`. Instalar Chromium con
 `npx playwright install chromium`; en Windows puede usarse Edge mediante
 `E2E_CHANNEL=msedge`. `npm run check:publication` revisa Git y el contenido compilado.
 
-**Backend y endpoints de negocio: aún no implementados.** El servidor actual sirve
-archivos estáticos; `/health` comprueba Nginx. La API y sincronización son otra entrega.
+**Backend implementado como servicio separado:** cuentas privadas, sesiones y
+guardado/recuperación de copias completas en SQLite. [Ejecutar y probar el backend](backend/README.md)
+y [contrato de endpoints](docs/public/api.md). Angular aún no está conectado a la
+API; no hay sincronización automática. El contenedor actual sirve archivos
+estáticos y su `/health` comprueba Nginx, mientras la API tiene su propia salud.
 
-Reglas: [AGENTS.md](AGENTS.md) y [frontend/AGENTS.md](frontend/AGENTS.md).
+Reglas: [AGENTS.md](AGENTS.md), [frontend/AGENTS.md](frontend/AGENTS.md)
+y [backend/AGENTS.md](backend/AGENTS.md).
 Documentación: [arquitectura](docs/public/arquitectura.md),
 [datos y privacidad](docs/public/datos-y-privacidad.md),
 [despliegue](docs/public/despliegue.md), [backlog](docs/public/backlog.md).
+[Convenciones de código y comentarios](docs/public/convenciones-codigo.md)
+y [migraciones](docs/public/migraciones.md).
