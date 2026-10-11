@@ -45,7 +45,7 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-                "glob": "**/*",
+                "glob": "{brand.png,favicon.ico,manifest.webmanifest,seed.json}",
                 "input": "public"
               }
             ],

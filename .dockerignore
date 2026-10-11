@@ -7,6 +7,12 @@ frontend/.angular/
 frontend/test-results/
 frontend/playwright-report/
 frontend/public/seed.json
+frontend/public/*
+!frontend/public/brand.png
+!frontend/public/favicon.ico
+!frontend/public/manifest.webmanifest
+**/*.local.*
+**/.env*
 !deploy/
 !deploy/nginx.conf
 !Dockerfile

@@ -24,6 +24,8 @@ del navegador puede borrar el diario. No hay cifrado específico de los archivos
 ni del almacenamiento de la aplicación; conservar respaldo y dispositivo seguros.
 
 Las carpetas locales privadas se excluyen de Git y del contexto Docker.
+Los recursos públicos se limitan a la demo, logo, icono y manifiesto; la preparación
+rechaza archivos inesperados en public/ antes de compilar.
 `check:publication` aplica una lista de rutas permitidas, busca indicadores
 conocidos de información personal/credenciales y compara la semilla compilada
 con la demo. Es una ayuda, no una garantía contra cualquier dato sensible.

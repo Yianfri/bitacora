@@ -36,11 +36,19 @@ jobs:
         working-directory: .
         run: |
           docker build --tag bitacora:check .
-          docker run --detach --name bitacora-check --publish 127.0.0.1:8088:8080 bitacora:check
+          docker run --detach --name bitacora-check --publish 127.0.0.1:8088:8080 --health-interval=1s --health-start-period=1s bitacora:check
+          trap 'docker stop bitacora-check > /dev/null' EXIT
           docker exec bitacora-check nginx -t
-          curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8088/health
+          for attempt in {1..30}; do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' bitacora-check)" = healthy ]; then break; fi
+            sleep 1
+          done
+          if [ "$(docker inspect --format '{{.State.Health.Status}}' bitacora-check)" != healthy ]; then
+            docker logs bitacora-check
+            exit 1
+          fi
+          curl --fail http://127.0.0.1:8088/health
           curl --fail http://127.0.0.1:8088/ > /dev/null
-          docker stop bitacora-check
   image:
     needs: checks
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.ENABLE_IMAGE_PUBLISH == 'true'

@@ -12,7 +12,7 @@
 
 ## Pendiente
 
-1. Verificar CI remoto y construir contenedor en un entorno con Docker activo.
+1. Completar CI remoto: la imagen ya se construyó; comprobar arranque y salud HTTP.
 2. Probar instalación, cierre/reapertura y almacenamiento en Android físico.
 3. Edición del plan y catálogo de lugares; navegación anterior/siguiente del detalle.
 4. Ensayar mapa integrado, proveedor y comportamiento sin red.
