@@ -1,0 +1,284 @@
+<a class="skip" href="#main">Ir al cuaderno</a>
+<header class="header">
+  <a class="brand" href="/"
+    ><img src="brand.png" alt="" width="58" height="58" /><span
+      ><strong>Bitácora</strong><small>Planificación y diario</small></span
+    ></a
+  ><span class="device-status">{{
+    online() ? 'En este dispositivo' : 'Sin conexión · guardado local'
+  }}</span>
+</header>
+<main id="main">
+  @if (error()) {
+    <div class="alert error" role="alert">{{ error() }}</div>
+  }
+  @if (message()) {
+    <div class="alert success" role="status">{{ message() }}</div>
+  }
+  @if (updateReady()) {
+    <div class="alert">
+      Hay una versión nueva disponible.
+      @if (note()) {
+        Termina o conserva tu borrador antes de actualizar.
+      } @else {
+        <button (click)="refresh()">Actualizar aplicación</button>
+      }
+    </div>
+  }
+  @if (cuaderno.loading()) {
+    <p role="status">Abriendo tu cuaderno…</p>
+  } @else if (note(); as input) {
+    <app-note-form
+      [initial]="input"
+      [stageName]="noteStageName()"
+      [tripId]="cuaderno.data()!.trip.id"
+      [kilometersByDate]="byDate()"
+      [busy]="busy()"
+      [error]="error()"
+      (save)="save($event)"
+      (close)="note.set(null); error.set('')"
+    />
+  } @else {
+    @if (pending(); as backup) {
+      <section class="card import-review" aria-labelledby="import-title">
+        <p class="eyebrow">Revisar antes de guardar</p>
+        <h1 id="import-title">
+          {{ pendingType() === 'seed' ? 'Viaje de ejemplo' : 'Restaurar una copia' }}
+        </h1>
+        <p>
+          {{ backup.data.trip.name }} · {{ backup.data.plannedDays.length }} jornadas ·
+          {{ backup.data.diaryEntries.length }} notas · {{ backup.data.places.length }} lugares
+        </p>
+        <p class="muted">
+          {{
+            pendingType() === 'seed'
+              ? 'Ejemplo ficticio para probar la aplicación. No corresponde a un viaje real.'
+              : 'Respaldo completo: ' + backup.exportedAt
+          }}
+        </p>
+        @if (pendingType() === 'restore' && cuaderno.data()?.trip?.id === backup.data.trip.id) {
+          <div class="alert warning">
+            Se reemplazará tu copia de este viaje, incluyendo notas y kilómetros. Las ediciones
+            posteriores a este respaldo se perderán. Exporta tu copia actual antes si quieres
+            conservarla.
+          </div>
+          <button (click)="export()">Exportar mi copia actual</button>
+        }
+        <p class="hint">
+          Todo se guarda en este navegador. PC y teléfono tienen copias independientes; aún no se
+          sincronizan.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy()" (click)="confirm()">
+            {{
+              busy()
+                ? 'Guardando…'
+                : pendingType() === 'seed'
+                  ? 'Importar este plan'
+                  : 'Restaurar esta copia'
+            }}</button
+          ><button [disabled]="busy()" (click)="pending.set(null)">Cancelar</button>
+        </div>
+      </section>
+    } @else if (cuaderno.data(); as data) {
+      <section class="overview card">
+        <div>
+          <p class="eyebrow">Mi viaje · {{ data.trip.startDate.slice(0, 4) }}</p>
+          <h1>Mi viaje</h1>
+          <p class="route">{{ data.trip.name }}</p>
+          <p class="muted">
+            {{ dateLabel(data.trip.startDate, true) }} — {{ dateLabel(data.trip.endDate, true) }}
+          </p>
+        </div>
+        <div class="stats">
+          <div>
+            <strong>{{ days().length }}</strong
+            ><span>jornadas previstas</span>
+          </div>
+          <div>
+            <strong>{{ distance(estimated()) }}</strong
+            ><span>pedaleo estimado</span>
+          </div>
+          <div>
+            <strong>{{ distance(real()) }}</strong
+            ><span>registrados · {{ data.actualDays.length }} fechas</span>
+          </div>
+        </div>
+      </section>
+      @if (data.trip.isDemo) {
+        <aside class="alert">
+          <strong>Demo · datos ficticios</strong>
+          <p>Fechas, etapas y montos de ejemplo. Para tu viaje, importa una copia privada.</p>
+        </aside>
+      }
+      @if (data.trip.returnStatus === 'in-review') {
+        <aside class="alert warning">
+          <strong>Plan de referencia · Regreso en revisión</strong>
+          <p>
+            El regreso de este plan está en revisión. Comprueba fechas, transportes y reservas antes
+            de usarlo durante el viaje.
+          </p>
+        </aside>
+      }
+      <div class="workspace">
+        <section class="card itinerary" aria-labelledby="itinerary-title">
+          <div class="section-top">
+            <div>
+              <p class="eyebrow">Calendario</p>
+              <h2 id="itinerary-title">Mi itinerario</h2>
+            </div>
+            <label class="date-select"
+              >Ir a una fecha<select
+                aria-label="Ir a una fecha"
+                [ngModel]="''"
+                (ngModelChange)="selectDate($event)"
+              >
+                <option value="">Elegir día</option>
+                @for (day of days(); track day.id) {
+                  <option [value]="day.date">
+                    {{ dateLabel(day.date) }} · {{ dayName(day, data) }}
+                  </option>
+                }
+              </select></label
+            >
+          </div>
+          <div class="block-picker" role="group" aria-label="Bloques del itinerario">
+            @for (index of blocks(); track index) {
+              <button
+                [class.selected]="block() === index"
+                [attr.aria-pressed]="block() === index"
+                (click)="setBlock(index)"
+              >
+                Días {{ index * 7 + 1 }}–{{ Math.min((index + 1) * 7, days().length) }}
+              </button>
+            }
+          </div>
+          <div class="page-count">
+            <p>
+              Mostrando {{ block() * 7 + 1 }}–{{ Math.min((block() + 1) * 7, days().length) }} de
+              {{ days().length }} jornadas
+            </p>
+            <div>
+              <button
+                aria-label="Bloque anterior"
+                [disabled]="block() === 0"
+                (click)="setBlock(block() - 1)"
+              >
+                ←</button
+              ><button
+                aria-label="Bloque siguiente"
+                [disabled]="block() === blocks().length - 1"
+                (click)="setBlock(block() + 1)"
+              >
+                →
+              </button>
+            </div>
+          </div>
+          <div class="days">
+            @for (day of visible(); track day.id; let index = $index) {
+              <article class="day" [class.open]="openId() === day.id">
+                <button
+                  class="day-button"
+                  [attr.aria-expanded]="openId() === day.id"
+                  [attr.aria-controls]="'detail-' + day.id"
+                  (click)="toggle(day.id)"
+                >
+                  <span class="ordinal">{{ block() * 7 + index + 1 }}</span
+                  ><span class="day-date">{{ dateLabel(day.date) }}</span
+                  ><span class="day-route"
+                    ><strong>{{ dayName(day, data) }}</strong
+                    ><small>{{ kinds[day.kind] }} · {{ day.logistics.difficultyText }}</small></span
+                  ><span class="day-km">{{ distance(dayKm(day)) }}</span
+                  ><span aria-hidden="true">{{ openId() === day.id ? '−' : '+' }}</span>
+                </button>
+                @if (openId() === day.id) {
+                  <div
+                    [id]="'detail-' + day.id"
+                    role="region"
+                    [attr.aria-label]="'Detalle: ' + dayName(day, data)"
+                  >
+                    <app-day-detail
+                      [day]="day"
+                      [data]="data"
+                      (note)="startNote(day)"
+                      (edit)="startNote(day, $event)"
+                      (close)="openId.set(null)"
+                    />
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+        <aside class="side">
+          <section class="card">
+            <p class="eyebrow">Tu copia</p>
+            <h2>Guardar y llevar</h2>
+            <p class="muted">
+              Notas y kilómetros guardados en este dispositivo. Exporta una copia para llevarla al
+              teléfono.
+            </p>
+            <button class="primary full" (click)="export()">Exportar respaldo</button
+            ><label class="file-button"
+              >Restaurar respaldo<input
+                type="file"
+                accept="application/json,.json"
+                (change)="readBackup($event)"
+                [disabled]="busy()"
+            /></label>
+            <details>
+              <summary>Plan y disponibilidad</summary>
+              <p class="hint">
+                {{
+                  offlineReady()
+                    ? 'Aplicación almacenada y datos locales presentes. Falta ensayar cierre/reapertura sin señal en tu Android.'
+                    : 'Uso sin señal por comprobar. En desarrollo el caché de la aplicación está desactivado.'
+                }}
+              </p>
+              <button (click)="checkOffline()">Comprobar preparación</button
+              ><button [disabled]="busy()" (click)="previewSeed()">Revisar viaje de ejemplo</button>
+            </details>
+          </section>
+          <section class="card">
+            <p class="eyebrow">Por revisar</p>
+            <h2>Antes de la ruta</h2>
+            <p class="muted">
+              Comprueba transportes, alojamiento y reservas. Importar un plan no confirma su
+              disponibilidad.
+            </p>
+            <p class="hint">
+              {{ data.places.length }} localidades y candidatos conservados en tu respaldo. Catálogo
+              editable en la próxima entrega.
+            </p>
+          </section>
+        </aside>
+      </div>
+    } @else {
+      <section class="card welcome">
+        <p class="eyebrow">Planificación y diario</p>
+        <h1>Planifica tu viaje</h1>
+        <p>Consulta etapas, guarda notas y respalda tu información.</p>
+        <div class="alert">
+          <strong>Tu información queda en este dispositivo</strong>
+          <p>
+            Prueba un viaje ficticio o importa tu archivo privado. Los archivos se leen aquí y no se
+            envían a un servidor.
+          </p>
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy()" (click)="previewSeed()">
+            Revisar viaje de ejemplo</button
+          ><label class="file-button"
+            >Traer un respaldo<input
+              type="file"
+              accept="application/json,.json"
+              (change)="readBackup($event)"
+              [disabled]="busy()"
+          /></label>
+        </div>
+        <p class="hint">Primera versión · tus datos quedan en este navegador.</p>
+      </section>
+    }
+  }
+</main>
+<footer>Bitácora <span>Las notas se guardan en este dispositivo.</span></footer>

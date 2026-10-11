@@ -1,0 +1,69 @@
+name: Comprobar y empaquetar
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck:tests
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:publication
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Comprobar receta Docker
+        working-directory: .
+        run: |
+          docker build --tag bitacora:check .
+          docker run --detach --name bitacora-check --publish 127.0.0.1:8088:8080 bitacora:check
+          docker exec bitacora-check nginx -t
+          curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8088/health
+          curl --fail http://127.0.0.1:8088/ > /dev/null
+          docker stop bitacora-check
+  image:
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.ENABLE_IMAGE_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nombre de imagen
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: echo "tag=ghcr.io/${REPOSITORY,,}:sha-$COMMIT" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.image.outputs.tag }}

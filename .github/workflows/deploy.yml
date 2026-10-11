@@ -1,0 +1,44 @@
+name: Desplegar en Linux
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: SHA completo de una imagen comprobada en main
+        required: true
+        type: string
+  workflow_run:
+    workflows: [Comprobar y empaquetar]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: bitacora-linux
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: >-
+      vars.ENABLE_SERVER_DEPLOY == 'true' &&
+      vars.ENABLE_IMAGE_PUBLISH == 'true' &&
+      ((github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+       (github.event_name == 'workflow_run' &&
+        vars.ENABLE_AUTO_DEPLOY == 'true' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'))
+    runs-on: [self-hosted, linux, bitacora]
+    environment: linux-local
+    timeout-minutes: 5
+    steps:
+      # No se ejecutan PR ni se descargan sus scripts en el servidor.
+      - name: Instalar imagen y comprobar salud
+        env:
+          COMMIT: ${{ github.event.workflow_run.head_sha || inputs.commit }}
+          REPOSITORY: ${{ github.repository }}
+          STACK_PATH: ${{ vars.BITACORA_STACK_PATH }}
+        run: |
+          set -euo pipefail
+          [[ "$COMMIT" =~ ^[a-f0-9]{40}$ ]] || { echo 'SHA inválido'; exit 1; }
+          [[ "$STACK_PATH" == /opt/stacks/bitacora ]] || { echo 'Configura la carpeta autorizada'; exit 1; }
+          cd "$STACK_PATH"
+          bash ./update.sh "ghcr.io/${REPOSITORY,,}:sha-$COMMIT"

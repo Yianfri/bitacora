@@ -1,0 +1,55 @@
+{
+  "name": "bitacora",
+  "version": "0.1.0",
+  "scripts": {
+    "ng": "ng",
+    "prestart": "node tools/prepare-seed.mjs",
+    "start": "ng serve --host 127.0.0.1 --port 4200",
+    "prebuild": "node tools/prepare-seed.mjs",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "pretest": "node tools/prepare-seed.mjs",
+    "test": "vitest run",
+    "lint": "eslint src tools tests *.ts *.mjs",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.spec.json",
+    "test:e2e": "playwright test",
+    "preview": "node tools/serve.mjs",
+    "check:publication": "node tools/check-publication.mjs --build",
+    "format": "prettier --write src tools tests *.json *.ts *.mjs",
+    "format:check": "prettier --check src tools tests *.json *.ts *.mjs"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "packageManager": "npm@10.9.3",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@angular/service-worker": "22.2.2",
+    "idb": "8.0.4",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zod": "4.6.6"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.2",
+    "@angular/cli": "^22.2.2",
+    "@angular/compiler-cli": "^22.2.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@types/node": "24.19.2",
+    "eslint": "10.12.0",
+    "fake-indexeddb": "6.2.5",
+    "globals": "17.13.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "8.71.1",
+    "vitest": "4.1.11"
+  }
+}

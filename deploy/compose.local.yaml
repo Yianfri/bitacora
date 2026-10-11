@@ -1,0 +1,13 @@
+# Desde la raíz: docker compose -f deploy/compose.local.yaml up -d --build
+name: bitacora
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: bitacora:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8088:8080"
+    security_opt:
+      - no-new-privileges:true

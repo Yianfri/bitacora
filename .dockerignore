@@ -1,0 +1,12 @@
+**
+!frontend/
+!frontend/**
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/test-results/
+frontend/playwright-report/
+frontend/public/seed.json
+!deploy/
+!deploy/nginx.conf
+!Dockerfile
