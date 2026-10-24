@@ -31,6 +31,19 @@
 .restore-review h3 {
   margin: 4px 0 8px;
 }
+.server-help {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+.server-help summary {
+  display: list-item;
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--ink);
+  cursor: pointer;
+}
 .account-strip,
 .local-copy-heading,
 .list-heading {

@@ -251,54 +251,75 @@ test('mantiene el uso local sin API y recupera la sesión y las copias tras rein
   browser,
 }) => {
   const page = await openProfile(browser, 'profile-d');
+  const context = page.context();
+  const outageAccount = await localStack?.createUser();
+  if (!outageAccount) throw new Error('No se creó la cuenta para probar la caída del servidor.');
   let recoveryPage: Page | undefined;
   let apiStopped = false;
+  let remoteWrites = 0;
+  page.on('request', (request) => {
+    if (request.method() === 'PUT' && new URL(request.url()).pathname.startsWith('/api/trips/'))
+      remoteWrites += 1;
+  });
   try {
-    await openWelcome(page);
-    await importDemo(page);
-    await openCopy(page);
-    await signInAndBind(page, primaryAccount);
-    const existingCopy = page.getByRole('button', {
-      name: 'Revisar recuperación',
-      exact: true,
-    });
-    if (await existingCopy.count()) {
-      await existingCopy.first().click();
-      await page.getByRole('button', { name: 'Confirmar recuperación' }).click();
-      await expect(page.getByRole('heading', { name: 'Mi itinerario' })).toBeVisible();
+    await test.step('Preparar una copia confirmada en una cuenta independiente', async () => {
+      await openWelcome(page);
+      await importDemo(page);
       await openCopy(page);
-    }
-    await page.getByRole('button', { name: 'Guardar una copia en mi cuenta' }).click();
-    await expect(page.locator('.local-copy .copy-status[data-state="current"]')).toBeVisible();
-    await localStack?.stopApi();
-    apiStopped = true;
-    await clickSection(page, 'Jornada');
-    await addNote(page, 'Nota guardada mientras la API estaba detenida');
-    await clickSection(page, 'Diario');
-    await expect(page.getByText('Nota guardada mientras la API estaba detenida')).toBeVisible();
-    await openCopy(page);
-    await page.getByRole('button', { name: 'Actualizar lista' }).click();
-    await expect(page.locator('.remote-panel [role="alert"]')).toContainText(
-      'No pudimos completar esta acción',
-    );
-    await localStack?.restartApi();
-    apiStopped = false;
-    await page.reload();
-    await expect(page.getByRole('heading', { name: 'Mi itinerario' })).toBeVisible();
-    await openCopy(page);
+      await signInAndBind(page, outageAccount);
+      await page.getByRole('button', { name: 'Guardar una copia en mi cuenta' }).click();
+      await expect(page.locator('.local-copy .copy-status[data-state="current"]')).toBeVisible();
+    });
+    const writesBeforeOutage = remoteWrites;
+    await test.step('Detener la API y conservar la edición local', async () => {
+      await localStack?.stopApi();
+      apiStopped = true;
+      await clickSection(page, 'Jornada');
+      await addNote(page, 'Nota guardada mientras la API estaba detenida');
+      await clickSection(page, 'Diario');
+      await expect(page.getByText('Nota guardada mientras la API estaba detenida')).toBeVisible();
+      await openCopy(page);
+      await page.getByRole('button', { name: 'Actualizar lista' }).click();
+      await expect(page.getByRole('heading', { name: 'Servidor no disponible' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Volver a comprobar' })).toBeEnabled();
+    });
+    await test.step('Desconectar el dispositivo y descargar el cuaderno local', async () => {
+      await context.setOffline(true);
+      await expect(page.getByRole('heading', { name: 'Sin conexión', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Volver a comprobar' })).toBeDisabled();
+      const downloaded = page.waitForEvent('download');
+      await page.getByRole('button', { name: 'Descargar copia local', exact: true }).click();
+      const download = await downloaded;
+      expect(download.suggestedFilename()).toMatch(/^routale-\d{4}-\d{2}-\d{2}\.json$/);
+      await context.setOffline(false);
+    });
+    await test.step('Reiniciar la API y volver a comprobar sin recargar', async () => {
+      await localStack?.restartApi();
+      apiStopped = false;
+      await page.getByRole('button', { name: 'Volver a comprobar' }).click();
+    });
     await expect(
       page.getByRole('button', { name: 'Revisar recuperación', exact: true }),
     ).toBeVisible();
+    await expect(
+      page.locator('.local-copy .copy-status[data-state="local-changes"]'),
+    ).toBeVisible();
+    expect(remoteWrites).toBe(writesBeforeOutage);
     await clickSection(page, 'Diario');
     await expect(page.getByText('Nota guardada mientras la API estaba detenida')).toBeVisible();
 
     recoveryPage = await openProfile(browser, 'profile-f');
     await openWelcome(recoveryPage);
-    await signInAndBind(recoveryPage, primaryAccount);
+    await signInAndBind(recoveryPage, outageAccount);
     await recoveryPage.getByRole('button', { name: 'Revisar recuperación', exact: true }).click();
     await recoveryPage.getByRole('button', { name: 'Confirmar recuperación' }).click();
     await expect(recoveryPage.getByRole('heading', { name: 'Mi itinerario' })).toBeVisible();
+    await clickSection(recoveryPage, 'Diario');
+    await expect(
+      recoveryPage.getByText('Nota guardada mientras la API estaba detenida'),
+    ).toHaveCount(0);
   } finally {
+    await context.setOffline(false);
     if (apiStopped) await localStack?.restartApi();
     await recoveryPage?.close();
     await page.close();
@@ -371,6 +392,7 @@ async function signInAndBind(page: Page, account: LocalCredentials): Promise<voi
   await page.getByRole('checkbox', { name: /Vincular este perfil a la cuenta/ }).check();
   await page.getByRole('button', { name: 'Vincular este perfil', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Guardar el cuaderno actual' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Actualizar lista' })).toBeEnabled();
   const reviewButton = page.getByRole('button', { name: 'Revisar recuperación', exact: true });
   const emptyState = page.getByText(/No hay copias para mostrar/);
   await expect

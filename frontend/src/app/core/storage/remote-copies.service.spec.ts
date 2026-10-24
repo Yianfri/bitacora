@@ -29,13 +29,22 @@ function jsonResponse(value: unknown, status = 200, headers: HeadersInit = {}): 
 }
 
 describe('RemoteCopiesService', () => {
-  it('termina la comprobación inicial si el servidor devuelve indisponibilidad', async () => {
-    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({}, 503)));
-    const unavailable = new RemoteCopiesService(cuaderno);
-    await expect(unavailable.initialize()).rejects.toThrow();
-    expect(unavailable.status()).toBe('error');
-    expect(cuaderno.data()?.trip.id).toBe(seed.data.trip.id);
-  });
+  it.each([500, 502, 503, 504])(
+    'conserva el cuaderno y ofrece reconectar ante una respuesta %i',
+    async (status) => {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(new Response('<html>Unavailable</html>', { status })),
+      );
+      const unavailable = new RemoteCopiesService(cuaderno);
+      await expect(unavailable.initialize()).rejects.toThrow();
+      expect(unavailable.status()).toBe('unavailable');
+      expect(unavailable.busy()).toBe(false);
+      expect(cuaderno.data()?.trip.id).toBe(seed.data.trip.id);
+    },
+  );
   let cuaderno: CuadernoService;
   let localRepository: TripRepository;
   let service: RemoteCopiesService;
@@ -45,6 +54,7 @@ describe('RemoteCopiesService', () => {
   let requests: RequestRecord[];
   let loseNextPutResponse: boolean;
   let failNextPutBeforeCommit: boolean;
+  let serverUnavailable: boolean;
   let serverFetch: typeof fetch;
 
   beforeEach(async () => {
@@ -54,6 +64,7 @@ describe('RemoteCopiesService', () => {
     requests = [];
     loseNextPutResponse = false;
     failNextPutBeforeCommit = false;
+    serverUnavailable = false;
     cuaderno = new CuadernoService();
     localRepository = new TripRepository();
     const localBackup = structuredClone(seed);
@@ -71,6 +82,7 @@ describe('RemoteCopiesService', () => {
       const method = init.method ?? 'GET';
       const headers = new Headers(init.headers);
       requests.push({ path, method, headers });
+      if (serverUnavailable) return new Response('<html>Bad Gateway</html>', { status: 502 });
 
       if (path === '/api/auth/csrf') {
         return jsonResponse({ token: sessionUser ? `csrf-${sessionUser}` : 'csrf-anonymous' });
@@ -159,6 +171,44 @@ describe('RemoteCopiesService', () => {
   afterEach(async () => {
     await localRepository.close();
     vi.unstubAllGlobals();
+  });
+
+  it('reconecta sin subir cambios locales ni perder la vinculación tras una caída', async () => {
+    await service.initialize();
+    await service.login('traveler.one', 'example-password');
+    await service.bindWorkspace(true);
+    await service.saveCurrent();
+    await service.previewRemote(seed.data.trip.id);
+    expect(service.pending()).not.toBeNull();
+    const writesBeforeOutage = requests.filter((request) => request.method === 'PUT').length;
+
+    serverUnavailable = true;
+    await expect(service.list()).rejects.toThrow();
+    expect(service.status()).toBe('unavailable');
+    await cuaderno.save({
+      date: '2030-06-04',
+      cyclingKm: null,
+      text: 'Nota local mientras el servidor estaba apagado',
+      stageIds: [],
+    });
+    expect(service.workspaceBinding()?.username).toBe('traveler.one');
+
+    serverUnavailable = false;
+    await service.initialize();
+    expect(service.status()).toBe('ready');
+    expect(service.error()).toBeNull();
+    expect(service.pending()).toBeNull();
+    expect(service.copies()[0].localStatus).toBe('local-changes');
+    expect(requests.filter((request) => request.method === 'PUT')).toHaveLength(writesBeforeOutage);
+    expect(remoteCopies.get(seed.data.trip.id)?.backup.data.diaryEntries).toHaveLength(0);
+    expect(cuaderno.data()?.diaryEntries[0].text).toBe(
+      'Nota local mientras el servidor estaba apagado',
+    );
+
+    await service.saveCurrent();
+    expect(remoteCopies.get(seed.data.trip.id)?.backup.data.diaryEntries[0].text).toBe(
+      'Nota local mientras el servidor estaba apagado',
+    );
   });
 
   it('vincula explícitamente, guarda una vez y reconoce un commit con respuesta perdida', async () => {

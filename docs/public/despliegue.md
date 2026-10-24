@@ -7,6 +7,12 @@ unitarias .NET, migraciones, API sobre SQLite temporal, contenido publicable y
 la imagen Nginx con sus cabeceras reales. Publicar imágenes sigue condicionado
 a ENABLE_IMAGE_PUBLISH=true y una versión aprobada de main.
 
+El job `image` se omite en las PR y cuando esa variable no está habilitada.
+Es el publicador de imágenes en GHCR; el job `checks` construye y comprueba la
+imagen web/Nginx independientemente de publicar. Ni ese job ni publicar en GHCR
+despliegan servicios en el Linux. La protección de `main` se configura por separado
+en los rulesets de GitHub: el YAML define los checks y la regla exige que pasen.
+
 Las recetas Docker/Compose incluyen frontend, API sin puertos publicados y un
 volumen privado para SQLite y claves. El stack local está ensayado; la instalación
 Linux existente se revisa por separado, sin desplegar ni cambiar sus servicios.

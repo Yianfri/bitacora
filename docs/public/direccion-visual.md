@@ -58,12 +58,13 @@ implementación incluye tema oscuro, foco al seleccionar una jornada desde el
 La imagen panorámica es un recurso generado de paisaje ficticio, decorativo y
 prescindible; no representa el itinerario ni unas coordenadas reales.
 
-Verificación de esta implementación: formato, lint, tipos, 23 pruebas de dominio
+Verificación histórica de esta entrega visual: formato, lint, tipos, 23 pruebas de dominio
 y almacenamiento, compilación sin advertencias y 9 recorridos en Edge. Se revisó
 el diseño a 320, 390, 736, 1024 y 1440 px en claro y oscuro, con movimiento reducido,
 selección por teclado y sin desbordamiento horizontal. Los recorridos comprueban
 también borradores, exportación/restauración, diario por fecha y escritura sin red.
 La prueba de eventos de instalación es simulada; no sustituye una instalación física.
+Los resultados y pendientes actuales se mantienen en el [backlog](backlog.md).
 
 ### Formato y forma de probarlo
 
