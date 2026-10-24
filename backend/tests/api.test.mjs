@@ -712,8 +712,8 @@ test("production accepts forwarded HTTPS and sets Secure cookies only from a con
     },
   });
   assert.equal(response.status, 200);
-  const csrfCookie = response
-    .headers.getSetCookie()
+  const csrfCookie = response.headers
+    .getSetCookie()
     .find((value) => value.startsWith(".Bitacora.Csrf="));
   assert.match(csrfCookie, /secure/i);
   assert.match(csrfCookie, /httponly/i);
