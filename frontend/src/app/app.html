@@ -74,9 +74,9 @@
     [class.section-itinerary]="section() === 'itinerary'"
   >
     <aside class="primary-nav" aria-label="Navegación principal">
-      <a class="brand" href="/" aria-label="Bitácora, inicio">
-        <img src="bitacora-icon.svg" alt="" width="46" height="46" />
-        <span><strong>Bitácora</strong><small>Cuaderno de viaje</small></span>
+      <a class="brand" href="/" aria-label="Routale, inicio">
+        <img src="routale-icon.svg" alt="" width="46" height="46" />
+        <span><strong>Routale</strong><small>Cuaderno de viaje</small></span>
       </a>
       <nav class="rail-links" aria-label="Secciones">
         <button
@@ -139,9 +139,9 @@
 
     <main id="main" class="main-content">
       <header class="compact-header">
-        <a class="brand" href="/" aria-label="Bitácora, inicio">
-          <img src="bitacora-icon.svg" alt="" width="38" height="38" />
-          <span><strong>Bitácora</strong></span>
+        <a class="brand" href="/" aria-label="Routale, inicio">
+          <img src="routale-icon.svg" alt="" width="38" height="38" />
+          <span><strong>Routale</strong></span>
         </a>
         <span class="device-status">{{
           online() ? 'En este dispositivo' : 'Sin conexión · local'
@@ -215,7 +215,7 @@
       @if (data.trip.isDemo) {
         <aside class="alert demo-banner">
           <strong>Demo · datos ficticios</strong>
-          <span>Plan ficticio para probar Bitácora.</span>
+          <span>Plan ficticio para probar Routale.</span>
         </aside>
       }
       @if (data.trip.returnStatus === 'in-review') {
@@ -422,7 +422,7 @@
         />
       }
       <footer class="workspace-footer">
-        Bitácora <span>Las notas se guardan en este dispositivo.</span>
+        Routale <span>Las notas se guardan en este dispositivo.</span>
       </footer>
     </main>
 
@@ -498,6 +498,6 @@
     </section>
   </main>
   <footer class="welcome-footer">
-    Bitácora <span>Las notas se guardan en este dispositivo.</span>
+    Routale <span>Las notas se guardan en este dispositivo.</span>
   </footer>
 }

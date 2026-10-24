@@ -238,7 +238,7 @@ arbitrario de usuarios como umbral, ni se promete que cambiar el proveedor EF
 complete una migración: tipos, datos, consultas, índices y concurrencia requieren
 pruebas sobre el motor nuevo.
 
-Abrir Bitácora a público añade decisiones diferentes: acceso HTTPS público,
+Abrir Routale a público añade decisiones diferentes: acceso HTTPS público,
 alta e invitaciones, recuperación de cuentas, administración y eliminación,
 aislamiento local y remoto, cuotas, privacidad y operación. El tailnet privado y
 las cuentas creadas por comando no constituyen todavía ese producto público.

@@ -1,5 +1,5 @@
 {
-  "name": "bitacora-api-checks",
+  "name": "routale-api-checks",
   "private": true,
   "type": "module",
   "scripts": {

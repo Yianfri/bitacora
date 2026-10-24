@@ -78,11 +78,11 @@
         </svg>
       </div>
       <p class="eyebrow">Acceso directo</p>
-      <h2 id="install-title">Instalar Bitácora</h2>
+      <h2 id="install-title">Instalar Routale</h2>
       @if (isInstalled() || isStandalone()) {
-        <p>Bitácora ya está instalada o abierta como aplicación en este dispositivo.</p>
+        <p>Routale ya está instalada o abierta como aplicación en este dispositivo.</p>
       } @else if (canInstall()) {
-        <p>Instala Bitácora para abrir el cuaderno desde la pantalla de inicio.</p>
+        <p>Instala Routale para abrir el cuaderno desde la pantalla de inicio.</p>
         <button class="primary" type="button" (click)="installApp.emit()">
           Instalar aplicación
         </button>

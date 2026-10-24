@@ -1,4 +1,4 @@
-# Backend de Bitácora
+# Backend de Routale
 
 - ASP.NET Core .NET 10; contrato en `docs/public/api.md` antes de cambiar rutas.
 - Endpoints y contratos HTTP por función en `src/Bitacora.Api/Features/Authentication`

@@ -1,4 +1,4 @@
-# Bitácora
+# Routale
 
 Aplicación Angular/PWA para consultar el viaje y registrar notas con guardado local.
 

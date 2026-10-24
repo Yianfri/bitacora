@@ -1,10 +1,27 @@
-# Bitácora
+# Routale
 
 Aplicación Angular/PWA para planificar viajes y llevar un diario, adaptable a PC y Android.
 
 Esta primera versión permite consultar un itinerario por bloques, abrir el detalle
 de un día, crear y editar notas con kilómetros diarios, recuperar borradores y
 exportar/restaurar una copia completa. Incluye una **demo ficticia** para probarla.
+
+## Nombre y compatibilidad
+
+Routale es el nuevo nombre de Bitácora. El repositorio está en
+[Yianfri/routale](https://github.com/Yianfri/routale).
+El cambio de marca conserva la base IndexedDB `cuaderno-austral-v1`, las claves
+de borrador `cuaderno-austral:draft:` y el formato `cuaderno-austral-backup` v1.
+Los archivos descargados ahora se llaman `routale-YYYY-MM-DD.json`; los respaldos
+anteriores siguen siendo válidos independientemente de su nombre de archivo.
+
+El backend conserva los nombres técnicos `Bitacora.Api`, `BitacoraDbContext`,
+`bitacora.db`, cookies y aplicación de Data Protection, junto con las migraciones
+existentes. Compose conserva el nombre de proyecto `bitacora` y las variables
+`BITACORA_*` para reutilizar configuraciones y recursos previos. Las nuevas
+imágenes de ejemplo apuntan a `ghcr.io/yianfri/routale`; no se publican ni se
+despliegan al cambiar la marca. Cambiar el origen web sigue requiriendo trasladar
+los datos mediante exportación/restauración, como explica [privacidad](docs/public/datos-y-privacidad.md).
 
 ## Datos personales
 

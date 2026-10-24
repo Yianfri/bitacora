@@ -8,9 +8,9 @@ await mkdir(output, { recursive: true });
 const allowed = new Set([
   'seed.json',
   'brand.png',
-  'bitacora-icon.svg',
-  'bitacora-icon-192.png',
-  'bitacora-icon-512.png',
+  'routale-icon.svg',
+  'routale-icon-192.png',
+  'routale-icon-512.png',
   'favicon.ico',
   'manifest.webmanifest',
   'route-cover.png',

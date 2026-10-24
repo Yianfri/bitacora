@@ -51,8 +51,11 @@ test('nota, borrador, edición, reimportación y restauración con revisión', a
   await openCopy(page);
   const downloaded = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exportar respaldo', exact: true }).click();
-  const backupInput: unknown = JSON.parse(await readFile(await (await downloaded).path(), 'utf8'));
+  const download = await downloaded;
+  expect(download.suggestedFilename()).toMatch(/^routale-\d{4}-\d{2}-\d{2}\.json$/);
+  const backupInput: unknown = JSON.parse(await readFile(await download.path(), 'utf8'));
   const backup = await validateBackup(backupInput);
+  expect(backup.format).toBe('cuaderno-austral-backup');
   expect(backup.data.actualDays).toHaveLength(1);
   expect(backup.data.actualDays[0].cyclingKm).toBe(43.2);
   expect(backup.data.diaryEntries).toHaveLength(2);
@@ -112,7 +115,7 @@ test('PWA: recarga y guardado sin red', async ({ page, context }) => {
   expect(
     await page.locator('.route-cover').evaluate((image: HTMLImageElement) => image.naturalWidth),
   ).toBeGreaterThan(0);
-  expect(await page.evaluate(async () => (await fetch('/bitacora-icon-512.png')).ok)).toBe(true);
+  expect(await page.evaluate(async () => (await fetch('/routale-icon-512.png')).ok)).toBe(true);
   await openThird(page);
   await page.getByRole('button', { name: 'Anotar este día' }).click();
   await page.getByRole('textbox', { name: 'Tu nota', exact: true }).fill('Nota escrita sin red');
@@ -213,9 +216,15 @@ test('navegación por jornada cruza bloques y el diario conserva la edición', a
 
 test('PWA: manifiesto e iconos reales y respuestas de instalación simuladas', async ({ page }) => {
   await importPlan(page);
+  await expect(page).toHaveTitle('Routale');
   const manifestResponse = await page.request.get('/manifest.webmanifest');
   const manifest = z
     .object({
+      name: z.literal('Routale'),
+      short_name: z.literal('Routale'),
+      id: z.literal('/'),
+      start_url: z.literal('/'),
+      scope: z.literal('/'),
       display: z.literal('standalone'),
       icons: z.array(z.object({ src: z.string(), sizes: z.string(), type: z.string() })),
     })
@@ -246,7 +255,7 @@ test('PWA: manifiesto e iconos reales y respuestas de instalación simuladas', a
   );
   await page.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
   await expect(
-    page.getByText('Bitácora ya está instalada o abierta como aplicación en este dispositivo.', {
+    page.getByText('Routale ya está instalada o abierta como aplicación en este dispositivo.', {
       exact: true,
     }),
   ).toBeVisible();
