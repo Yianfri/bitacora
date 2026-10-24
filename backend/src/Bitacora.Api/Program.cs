@@ -8,7 +8,9 @@ using Bitacora.Api.Storage;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,7 @@ var adminCommand = args is ["create-user"] or ["migrate"];
 var builder = WebApplication.CreateBuilder(adminCommand ? [] : args);
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
 builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+var knownProxies = ParseKnownProxies(builder.Configuration["ReverseProxy:KnownProxies"]);
 builder.Services.AddProblemDetails();
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 5 * 1024 * 1024);
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.MaxDepth = 64);
@@ -87,7 +90,29 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         }));
 });
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    // Sin un proxy declarado se ignoran por completo las cabeceras reenviadas.
+    options.ForwardedHeaders = knownProxies.Count == 0
+        ? ForwardedHeaders.None
+        : ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
+    foreach (var address in knownProxies)
+    {
+        options.KnownProxies.Add(address);
+    }
+});
 var app = builder.Build();
+var transportRemoteAddressKey = new object();
+app.Use(async (context, next) =>
+{
+    // El límite Development comprueba el peer TCP, no una IP reescrita por X-Forwarded-For.
+    context.Items[transportRemoteAddressKey] = context.Connection.RemoteIpAddress;
+    await next();
+});
+app.UseForwardedHeaders();
 var contexts = app.Services.GetRequiredService<IDbContextFactory<BitacoraDbContext>>();
 if (args is ["migrate"] || app.Environment.IsDevelopment())
 {
@@ -112,7 +137,9 @@ if (adminCommand)
 app.UseExceptionHandler();
 app.Use(async (context, next) =>
 {
-    if (app.Environment.IsDevelopment() && context.Connection.RemoteIpAddress is { } address && !IPAddress.IsLoopback(address))
+    var transportAddress = context.Items[transportRemoteAddressKey] as IPAddress;
+    if (app.Environment.IsDevelopment() && transportAddress is { } address
+        && !IsLoopback(address) && !knownProxies.Contains(NormalizeAddress(address)))
     {
         context.Response.StatusCode = 403;
         return;
@@ -194,3 +221,24 @@ app.MapGet("/health", (IDbContextFactory<BitacoraDbContext> factory) =>
     }
 });
 app.Run();
+
+static IReadOnlySet<IPAddress> ParseKnownProxies(string? configuredAddresses)
+{
+    var addresses = new HashSet<IPAddress>();
+    foreach (var value in (configuredAddresses ?? string.Empty).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+    {
+        if (!IPAddress.TryParse(value, out var address))
+        {
+            throw new InvalidOperationException("ReverseProxy:KnownProxies debe contener direcciones IP válidas separadas por comas.");
+        }
+
+        addresses.Add(NormalizeAddress(address));
+    }
+
+    return addresses;
+}
+
+static IPAddress NormalizeAddress(IPAddress address) => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
+
+static bool IsLoopback(IPAddress address) => IPAddress.IsLoopback(address)
+    || (address.IsIPv4MappedToIPv6 && IPAddress.IsLoopback(address.MapToIPv4()));

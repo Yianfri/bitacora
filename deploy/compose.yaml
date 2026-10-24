@@ -1,10 +1,68 @@
 # Copiar este archivo y .env a la carpeta de la stack en Dockge.
+# En producción: ejecutar el comando migrate una vez antes de up.
 name: bitacora
 services:
-  web:
-    image: ${BITACORA_IMAGE:?Define la imagen exacta en .env}
+  api:
+    image: ${BITACORA_API_IMAGE:?Define la imagen exacta de la API en .env}
     restart: unless-stopped
-    ports:
-      - "${BITACORA_BIND_IP:-127.0.0.1}:${BITACORA_PORT:-8088}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Storage__Directory: /data
+      ReverseProxy__KnownProxies: ${BITACORA_WEB_IP:-172.30.40.2}
+    volumes:
+      - private_data:/data
+    networks:
+      private:
+        ipv4_address: ${BITACORA_API_IP:-172.30.40.3}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 15s
+      retries: 3
+
+  web:
+    image: ${BITACORA_IMAGE:?Define la imagen integrada web/API exacta en .env}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${BITACORA_BIND_IP:-127.0.0.1}:${BITACORA_PORT:-8088}:8080"
+    networks:
+      edge: {}
+      private:
+        ipv4_address: ${BITACORA_WEB_IP:-172.30.40.2}
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+      - /var/cache/nginx:rw,noexec,nosuid,size=32m
+      - /var/run:rw,noexec,nosuid,size=1m
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 15s
+
+volumes:
+  private_data:
+    name: ${BITACORA_DATA_VOLUME:-routale_private_data}
+
+networks:
+  edge: {}
+  private:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${BITACORA_NETWORK_SUBNET:-172.30.40.0/24}
+          gateway: ${BITACORA_NETWORK_GATEWAY:-172.30.40.1}

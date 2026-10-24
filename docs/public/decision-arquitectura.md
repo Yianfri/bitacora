@@ -1,8 +1,9 @@
 # Decisión de arquitectura y evolución
 
 Estado: dirección de desarrollo con implementación parcial. El nuevo diseño y el
-flujo PWA están implementados en Angular; faltan la instalación física, la conexión
-de Angular con la API y el despliegue del servidor Linux.
+flujo PWA y la conexión manual de Angular con la API están implementados. El stack
+local .NET/SQLite y Nginx tiene imágenes y volúmenes; faltan la instalación física
+y el despliegue del servidor Linux tras su revisión.
 
 ## Objetivo y alcance
 
@@ -161,8 +162,9 @@ locales posteriores, Resultado remoto por comprobar y Conflicto de revisión.
   otras pestañas. Asociar la operación con una versión local del contenido.
 - Un acuse de guardado remoto solo corresponde a ese snapshot. Si se editó el
   cuaderno durante el envío, los cambios posteriores siguen pendientes de copia.
-  El mecanismo de versión local aún no está implementado y requiere migración
-  y pruebas conservando identificadores y respaldos existentes.
+  La migración IndexedDB v2 agrega tokens por viaje, metadatos, asociaciones por
+  origen/cuenta y archivo de copias reemplazadas. Conserva la base y store de viajes
+  anteriores, identificadores y respaldos.
 - Crear con If-None-Match y actualizar con If-Match. Un 412 conserva ambos estados
   y pide revisión; no reintentar adoptando automáticamente el ETag más reciente.
 - Si se pierde la respuesta de un PUT, el servidor podría haber confirmado.
@@ -194,13 +196,12 @@ cliente, proxy y servidor, además de cuotas y pruebas.
 
 ## Infraestructura inicial y recuperación
 
-La receta actual solo construye el frontend. Faltan imagen y volumen de API,
-proxy del mismo origen y su prueba conjunta. Antes de usar producción hay que
-procesar las cabeceras reenviadas de proxies conocidos antes del control HTTPS:
-la API exige Request.IsHttps y aún no configura ese middleware. También se debe
-comprobar la dirección usada para limitar intentos de login. No confiar en
-cabeceras suministradas por un cliente arbitrario ni desactivar cookies Secure
-para ocultar un problema de proxy.
+Las recetas incluyen frontend/proxy, API sin puertos publicados y volumen para
+SQLite y claves. Se procesan cabeceras solo desde proxies declarados antes del
+control HTTPS; Nginx reemplaza las cabeceras de cliente y la API mantiene su control
+de sesión, HTTPS y límite de login. La configuración de producción solo se usa
+detrás de un ingreso HTTPS privado hacia el puerto loopback. La red interna de
+API se separa de la red del frontend que permite publicar ese puerto.
 
 Mantener una sola instancia de API y SQLite en disco local persistente del
 servidor. No compartir el archivo SQLite entre equipos ni publicarlo como servicio
@@ -253,10 +254,10 @@ responsabilidad operativa y una carga que lo requieran.
 1. Diseño y flujo de instalación PWA implementados en Angular. Falta verificar
    instalación física, cierre y reapertura en Windows y Android.
    Ver [dirección visual](direccion-visual.md).
-2. Integrar sesión y copias explícitas con la API en el PC, resolviendo estados
-   locales, revisiones, límite de tamaño y revisión de reemplazos.
-3. Completar imagen, proxy y persistencia de API; probar migración, reinicio y
-   recuperación con datos ficticios. Después revisar y ensayar el Linux real.
+2. Sesión y copias explícitas integradas en el PC, con estados locales,
+   revisiones, límite de tamaño y revisión de reemplazos.
+3. Imágenes, proxy y persistencia implementados y ensayados localmente con datos
+   ficticios. Revisar y ensayar el Linux real antes de desplegar allí.
 4. Operar privadamente y medir necesidades antes de implementar sincronización
    automática, colaboración, otra base o una distribución nativa.
 

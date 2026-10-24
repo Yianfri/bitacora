@@ -88,7 +88,7 @@ integrar plugins. Ninguno se ha instalado ni empaquetado para Routale. La decisi
 se revisará si hacen falta funciones nativas o distribución en una tienda.
 
 Instalar la PWA no conecta los datos entre PC y móvil. La API de copias privadas
-está implementada como servicio separado y todavía falta integrarla en Angular.
+está integrada en Mi copia mediante acciones explícitas de guardado y recuperación.
 Alojar solo el frontend en Linux tampoco realiza esa integración ni constituye
 un respaldo del diario local.
 

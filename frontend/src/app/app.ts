@@ -14,20 +14,23 @@ import {
 import { NoteForm } from './features/diary/note-form';
 import { DiaryGroup, DiaryView } from './features/diary/diary-view';
 import { CopyView } from './features/copy/copy-view';
+import { RemoteCopiesView, RemoteLoginDetails } from './features/copy/remote-copies-view';
 import { DayDetail } from './features/trip/day-detail';
 import { dateLabel, distance } from './shared/display';
 import { PwaInstallService, PWA_INSTALL_GUIDANCE } from './shared/pwa-install';
+import { RemoteCopiesService } from './core/storage/remote-copies.service';
 
 type Section = 'day' | 'itinerary' | 'diary' | 'copy';
 
 @Component({
-  imports: [FormsModule, NoteForm, DayDetail, DiaryView, CopyView],
+  imports: [FormsModule, NoteForm, DayDetail, DiaryView, CopyView, RemoteCopiesView],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
 export class App implements OnInit, OnDestroy {
   readonly cuaderno = inject(CuadernoService);
+  readonly remoteCopies = inject(RemoteCopiesService);
   readonly pwaInstall = inject(PwaInstallService);
   private readonly updates = inject(SwUpdate);
   readonly form = viewChild(NoteForm);
@@ -128,6 +131,11 @@ export class App implements OnInit, OnDestroy {
     } catch (error) {
       this.fail(error);
     }
+    try {
+      await this.remoteCopies.initialize();
+    } catch {
+      // Remote copies are optional; the local notebook remains available offline.
+    }
   }
 
   ngOnDestroy(): void {
@@ -156,6 +164,19 @@ export class App implements OnInit, OnDestroy {
       await work();
     } catch (error) {
       this.fail(error);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private async remoteAction(work: () => Promise<void>): Promise<void> {
+    this.busy.set(true);
+    this.error.set('');
+    this.message.set('');
+    try {
+      await work();
+    } catch (error) {
+      if (!this.remoteCopies.error()) this.fail(error);
     } finally {
       this.busy.set(false);
     }
@@ -199,14 +220,95 @@ export class App implements OnInit, OnDestroy {
     });
   }
 
-  export(): void {
+  async export(): Promise<void> {
     try {
-      this.cuaderno.export();
+      await this.cuaderno.export();
       this.error.set('');
       this.message.set('Respaldo descargado. Guárdalo en un lugar privado.');
     } catch (error) {
       this.fail(error);
     }
+  }
+
+  remoteLogin(details: RemoteLoginDetails): Promise<void> {
+    return this.remoteAction(() => this.remoteCopies.login(details.username, details.password));
+  }
+
+  remoteLogout(): Promise<void> {
+    return this.remoteAction(async () => {
+      await this.remoteCopies.logout();
+      this.message.set('Sesión cerrada. Tu cuaderno local sigue en este dispositivo.');
+    });
+  }
+
+  bindRemoteWorkspace(): Promise<void> {
+    return this.remoteAction(async () => {
+      await this.remoteCopies.bindWorkspace(true);
+      this.message.set('Este perfil quedó vinculado a tu cuenta.');
+    });
+  }
+
+  refreshRemoteCopies(): Promise<void> {
+    return this.remoteAction(async () => {
+      await this.remoteCopies.list();
+      this.message.set('Lista de copias actualizada.');
+    });
+  }
+
+  retryRemoteSession(): Promise<void> {
+    return this.remoteAction(() => this.remoteCopies.initialize());
+  }
+
+  saveRemoteCopy(reviewedRemoteEtag: string | null): Promise<void> {
+    const localTripId = this.cuaderno.data()?.trip.id;
+    if (!localTripId) return Promise.resolve();
+    return this.remoteAction(async () => {
+      const result = await this.remoteCopies.saveCurrent(
+        localTripId,
+        reviewedRemoteEtag ?? undefined,
+      );
+      await this.remoteCopies.list();
+      if (result.status === 'saved') this.message.set('Copia guardada en tu cuenta.');
+      else if (result.status === 'already-current')
+        this.message.set('La copia de tu cuenta ya coincide con este cuaderno.');
+      else if (result.status === 'conflict')
+        this.message.set(
+          'La copia de tu cuenta cambió. Revisa su contenido antes de decidir si vuelves a guardar o recuperar.',
+        );
+      else {
+        const copy = this.remoteCopies.copies().find((item) => item.id === localTripId);
+        this.message.set(
+          copy?.localStatus === 'current'
+            ? 'La respuesta se perdió, pero comprobamos que la copia de tu cuenta quedó actualizada.'
+            : copy?.localStatus === 'local-changes'
+              ? 'La copia remota quedó guardada, pero este cuaderno tuvo cambios posteriores.'
+              : 'La respuesta no confirmó el resultado. Comprueba el estado antes de otra acción.',
+        );
+      }
+    });
+  }
+
+  reviewRemoteCopy(tripId: string): Promise<void> {
+    return this.remoteAction(async () => {
+      await this.remoteCopies.previewRemote(tripId);
+    });
+  }
+
+  cancelRemoteRestore(): void {
+    this.remoteCopies.cancelRestore();
+  }
+
+  confirmRemoteRestore(): Promise<void> {
+    return this.remoteAction(async () => {
+      await this.remoteCopies.confirmRestore();
+      this.pending.set(null);
+      this.block.set(0);
+      this.openId.set(this.days()[0]?.id ?? null);
+      this.section.set('day');
+      this.message.set('Copia recuperada en este dispositivo.');
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      await this.checkOffline();
+    });
   }
 
   async installApp(): Promise<void> {

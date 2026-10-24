@@ -54,7 +54,7 @@ const allowed = (path) =>
   ) ||
   /^frontend\/(AGENTS\.md|README\.md|[\w.-]+\.(json|ts|mjs))$/.test(path) ||
   /^docs\/public\/[\w-]+\.md$/.test(path) ||
-  /^backend\/(AGENTS\.md|README\.md|\.editorconfig|Bitacora\.slnx|package\.json|tests\/api\.test\.mjs)$/.test(
+  /^backend\/(AGENTS\.md|README\.md|Dockerfile|\.dockerignore|\.editorconfig|Bitacora\.slnx|package\.json|tests\/api\.test\.mjs)$/.test(
     path,
   ) ||
   /^backend\/tests\/Bitacora\.Api\.Tests\/(?:(?:Domain|Persistence)\/)?[\w.-]+\.(?:cs|csproj|json)$/.test(
@@ -64,13 +64,17 @@ const allowed = (path) =>
     path,
   ) ||
   path === 'backend/src/Bitacora.Api/packages.lock.json' ||
-  /^deploy\/(compose(\.local)?\.ya?ml|nginx\.conf|update\.sh|\.env\.example)$/.test(path) ||
+  /^deploy\/(compose(\.local)?\.ya?ml|nginx(?:\.local|\.stack)?\.conf|update\.sh|\.env\.example)$/.test(
+    path,
+  ) ||
   /^\.github\/workflows\/(ci|deploy)\.yml$/.test(path);
 for (const path of files) {
   assert(allowed(path), `Archivo fuera del alcance público: ${path}`);
   assert(
-    !(path !== 'deploy/compose.local.yaml' && /\.local\./.test(path)) &&
-      !/\.env$|backup|test-results|node_modules|\.angular|seed\.json/.test(path),
+    !(
+      !['deploy/compose.local.yaml', 'deploy/nginx.local.conf'].includes(path) &&
+      /\.local\./.test(path)
+    ) && !/\.env$|backup|test-results|node_modules|\.angular|seed\.json/.test(path),
     `Archivo privado o generado: ${path}`,
   );
   if (/\.(png|ico)$/.test(path)) continue;

@@ -8,15 +8,16 @@ No añadir un plan personal a código, pruebas, capturas, README ni ejemplos.
 | --- | --- | --- |
 | Código, documentación técnica y demo ficticia | Git y compilación | A GitHub al subir código. |
 | Fuentes y planificación privada de una instalación | Archivos locales excluidos | No por el proyecto. |
-| Viaje importado, jornadas y notas | IndexedDB del navegador | No; Angular aún no consume la API. |
+| Viaje importado, jornadas y notas | IndexedDB del navegador | Solo al elegir guardar una copia en la cuenta; importar y escribir no envían datos. |
 | Borrador de una nota | localStorage del navegador | No. |
 | Respaldo exportado | Descarga elegida por el usuario | No por el proyecto. |
-| Copias enviadas explícitamente a la API | SQLite privado | Solo mediante petición autenticada; aún no hay acción de envío en Angular. |
+| Copias enviadas explícitamente a la API | SQLite privado | Solo mediante petición autenticada desde Mi copia. |
 | Cuentas, hashes de contraseña, sesiones y claves de cookies | Directorio privado del backend | Permanecen en la instalación de la API, fuera de Git e imágenes. |
 
 Un archivo propio se selecciona en **Traer un respaldo** o **Restaurar respaldo**.
 Se lee con File.text, se valida y se revisa antes de guardar. La selección del
-archivo no hace upload. Puede contener datos originales y notas, por lo que se
+archivo no hace upload. Guardar una copia en la cuenta envía su contenido completo.
+Puede contener datos originales y notas, por lo que se
 debe guardar en privado. La pantalla puede revelar información si se comparte
 una captura o se usa un dispositivo ajeno.
 
@@ -43,8 +44,11 @@ Revisar también cambios e historial antes de publicar.
 La API incluye autenticación, autorización por usuario, validación de respaldos
 y revisión transaccional para evitar sobrescrituras. Su contrato se documenta
 en [API](api.md). Publicar el código no habilita un servidor público ni sube el
-diario del navegador. La integración y sincronización entre dispositivos siguen
-pendientes; cualquier recuperación local debe revisarse antes de reemplazar.
+diario del navegador. La integración manual está disponible; la sincronización
+automática sigue pendiente. Recuperar exige revisión, archiva la copia reemplazada
+y rechaza cambios concurrentes del cuaderno. La vinculación persistente impide
+usar otra cuenta en el mismo perfil; se necesita un perfil separado. Cerrar sesión
+no elimina datos locales ni desvincula el perfil.
 
 Las cuotas por usuario también se comprueban dentro de la transacción para evitar
 agotar el almacenamiento con copias simultáneas. La imagen Nginx conserva las

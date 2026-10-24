@@ -13,10 +13,24 @@ public static class TripEndpoints
         // Todo el grupo exige sesión. El propietario siempre viene de sus claims,
         // nunca de un campo del respaldo que pueda controlar el cliente.
         var trips = app.MapGroup("/api/trips").RequireAuthorization();
-        trips.MapGet("/", (ClaimsPrincipal user, TripStore store) =>
-            Results.Ok(store.List(Owner(user)).Select(ToResponse)));
-        trips.MapGet("/{id}", (string id, ClaimsPrincipal user, TripStore store, HttpResponse response) =>
+        trips.MapGet("/", (ClaimsPrincipal user, HttpContext context, TripStore store) =>
         {
+            var mismatch = ValidateWorkspaceAccount(context);
+            if (mismatch is not null)
+            {
+                return mismatch;
+            }
+
+            return Results.Ok(store.List(Owner(user)).Select(ToResponse));
+        });
+        trips.MapGet("/{id}", (string id, ClaimsPrincipal user, HttpContext context, TripStore store, HttpResponse response) =>
+        {
+            var mismatch = ValidateWorkspaceAccount(context);
+            if (mismatch is not null)
+            {
+                return mismatch;
+            }
+
             var trip = store.Read(Owner(user), id);
             if (trip is null)
             {
@@ -28,6 +42,12 @@ public static class TripEndpoints
         });
         trips.MapPut("/{id}", (string id, JsonElement backup, HttpContext context, TripStore store) =>
         {
+            var mismatch = ValidateWorkspaceAccount(context);
+            if (mismatch is not null)
+            {
+                return mismatch;
+            }
+
             var create = context.Request.Headers.IfNoneMatch.ToString();
             var update = context.Request.Headers.IfMatch.ToString();
             if (create.Length == 0 && update.Length == 0)
@@ -77,6 +97,23 @@ public static class TripEndpoints
             context.Response.Headers.ETag = Quote(saved.Revision);
             return Results.Json(ToResponse(saved), statusCode: expected is null ? 201 : 200);
         });
+    }
+
+    private static IResult? ValidateWorkspaceAccount(HttpContext context)
+    {
+        if (!context.Request.Headers.TryGetValue("X-Routale-Account", out var boundAccount))
+        {
+            return null;
+        }
+
+        var authenticatedAccount = context.User.FindFirstValue(ClaimTypes.Name);
+        if (boundAccount.Count == 1 && string.Equals(boundAccount[0], authenticatedAccount, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return Results.Problem(statusCode: 409, title: "La cuenta activa cambió.",
+            extensions: new Dictionary<string, object?> { ["code"] = "workspace_account_mismatch" });
     }
 
     private static string Owner(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;

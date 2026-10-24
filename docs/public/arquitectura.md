@@ -4,11 +4,12 @@ La [decisión de arquitectura y evolución](decision-arquitectura.md) fija la
 dirección elegida para la siguiente entrega: PWA instalable, trabajo local y
 copias privadas en Linux. Distingue el modelo actual de las propuestas futuras,
 las relaciones de datos y los criterios para crecer. Esta página describe lo
-que está implementado; no implica que esa integración o despliegue ya existan.
+que está implementado; no afirma que ya exista un despliegue en Linux.
 
 Frontend Angular 22.2.2 standalone, TypeScript estricto y PWA mediante Angular
 Service Worker. Backend ASP.NET Core .NET 10 con EF Core 10 y SQLite como servicio separado;
-Angular todavía no consume la API y no hay sincronización automática.
+Angular consume la API desde Mi copia para sesión y copias explícitas; no hay
+sincronización automática. IndexedDB conserva el cuaderno de trabajo sin red.
 
 El componente raíz coordina carga, selección del día, importación y navegación.
 `features/trip` presenta logística y diario; `features/diary` maneja el formulario
@@ -55,7 +56,7 @@ no hay modelo de edición remota por entidad todavía.
 
 Una transacción con bloqueo de escritura compara la revisión antes de guardar;
 dos clientes con la misma revisión no pueden sobrescribirse silenciosamente.
-ETag e If-Match permiten mostrar el conflicto en la futura integración.
+ETag e If-Match permiten mostrar conflictos en Mi copia sin sobrescrituras silenciosas.
 SQLite se elige para esta instalación personal por su archivo persistente y
 ejecución en Windows/Linux sin un servicio adicional de base de datos. Un cambio
 de motor requerirá migración y pruebas, no solo cambiar una cadena de conexión.

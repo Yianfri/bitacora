@@ -10,6 +10,7 @@ playwright-report/
 backups/
 *.local.*
 !deploy/compose.local.yaml
+!deploy/nginx.local.conf
 tools/*.png
 frontend/public/seed.json
 # Private originals, planning documents, generated imports and prototypes stay local.

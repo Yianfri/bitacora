@@ -17,10 +17,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '24.19.0'
+          node-version: "24.19.0"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
@@ -29,6 +29,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck:tests
       - run: npm test
+      - run: node --test tools/serve.test.mjs
       - run: npm run build
       - run: npm run check:publication
       - run: npx playwright install --with-deps chromium
@@ -58,13 +59,13 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '24.19.0'
+          node-version: "24.19.0"
       - run: node ../frontend/tools/prepare-seed.mjs
       - run: dotnet tool restore
       - run: dotnet restore Bitacora.slnx --locked-mode
@@ -73,29 +74,105 @@ jobs:
       - run: npm run check:migrations
       - run: npm run test:unit
       - run: npm test
+  integration:
+    name: Integración navegador, API y SQLite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Instalar dependencias del frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Generar demo ficticia para las pruebas .NET
+        run: node frontend/tools/prepare-seed.mjs
+      - name: Restaurar herramientas .NET
+        working-directory: backend
+        run: dotnet tool restore
+      - name: Restaurar solución .NET con lockfiles
+        working-directory: backend
+        run: dotnet restore Bitacora.slnx --locked-mode
+      - name: Compilar API y pruebas .NET
+        working-directory: backend
+        run: dotnet build Bitacora.slnx --no-restore --configuration Debug
+      - name: Instalar Chromium para Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Probar navegador contra API y SQLite reales
+        working-directory: frontend
+        run: npm run test:integration
   image:
-    needs: [checks, backend]
+    needs: [checks, backend, integration]
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.ENABLE_IMAGE_PUBLISH == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       packages: write
+    outputs:
+      web_digest: ${{ steps.web.outputs.digest }}
+      api_digest: ${{ steps.api.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Nombre de imagen
-        id: image
-        env:
-          REPOSITORY: ${{ github.repository }}
-          COMMIT: ${{ github.sha }}
-        run: echo "tag=ghcr.io/${REPOSITORY,,}:sha-$COMMIT" >> "$GITHUB_OUTPUT"
-      - uses: docker/build-push-action@v6
+      - name: Metadatos de las imágenes
+        id: meta
+        working-directory: .
+        run: |
+          repository="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          version="$(node -p "require('./frontend/package.json').version")"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo 'La versión del paquete no es válida para la etiqueta OCI.' >&2
+            exit 1
+          fi
+          echo "web_image=ghcr.io/$repository" >> "$GITHUB_OUTPUT"
+          echo "api_image=ghcr.io/${repository}-api" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "revision=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - name: Construir y publicar frontend integrado con proxy HTTPS
+        id: web
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           push: true
-          tags: ${{ steps.image.outputs.tag }}
+          build-args: NGINX_CONFIG=deploy/nginx.stack.conf
+          tags: ${{ steps.meta.outputs.web_image }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.meta.outputs.revision }}
+      - name: Construir y publicar API
+        id: api
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.api_image }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.meta.outputs.revision }}
+      - name: Resumen de imágenes inmutables
+        env:
+          WEB_IMAGE: ${{ steps.meta.outputs.web_image }}
+          WEB_DIGEST: ${{ steps.web.outputs.digest }}
+          API_IMAGE: ${{ steps.meta.outputs.api_image }}
+          API_DIGEST: ${{ steps.api.outputs.digest }}
+        run: |
+          {
+            echo '### Imágenes publicadas'
+            printf -- '- Frontend: `%s:sha-%s` — `%s`\n' "$WEB_IMAGE" "$GITHUB_SHA" "$WEB_DIGEST"
+            printf -- '- API: `%s:sha-%s` — `%s`\n' "$API_IMAGE" "$GITHUB_SHA" "$API_DIGEST"
+          } >> "$GITHUB_STEP_SUMMARY"

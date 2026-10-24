@@ -121,6 +121,7 @@ export interface Backup {
   schemaVersion: 1;
   exportedAt: string;
   data: TripData;
+  [key: string]: unknown;
 }
 export interface NoteInput {
   date: string;
