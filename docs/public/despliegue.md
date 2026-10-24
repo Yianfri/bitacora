@@ -48,7 +48,7 @@ Tailscale Serve ofrece HTTPS a dispositivos autorizados del tailnet, sin comprar
 un dominio propio. Android y PC deben tener Tailscale instalado y conectado,
 y las reglas de acceso deben limitar quién llega al servicio.
 
-El enlace tendrá la forma de ejemplo `https://bitacora.nombre-del-tailnet.ts.net`.
+El enlace tendrá la forma de ejemplo `https://routale.nombre-del-tailnet.ts.net`.
 La dirección real depende del nombre del equipo y el tailnet, y se registra solo
 en documentación privada. Revisar los otros servicios Serve del equipo antes de
 modificar su configuración. Los nombres usados en certificados HTTPS aparecen

@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "bitacora": {
+    "routale": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:class": {
@@ -45,7 +45,7 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-                "glob": "{brand.png,bitacora-icon.svg,bitacora-icon-192.png,bitacora-icon-512.png,favicon.ico,manifest.webmanifest,route-cover.png,seed.json}",
+                "glob": "{brand.png,routale-icon.svg,routale-icon-192.png,routale-icon-512.png,favicon.ico,manifest.webmanifest,route-cover.png,seed.json}",
                 "input": "public"
               }
             ],
@@ -80,10 +80,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "bitacora:build:production"
+              "buildTarget": "routale:build:production"
             },
             "development": {
-              "buildTarget": "bitacora:build:development"
+              "buildTarget": "routale:build:development"
             }
           },
           "defaultConfiguration": "development"

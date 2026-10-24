@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
-const root = resolve('dist/bitacora/browser');
+const root = resolve('dist/routale/browser');
 const port = Number(process.env.PORT ?? 4200);
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -32,4 +32,4 @@ createServer(async (req, res) => {
     res.writeHead(404);
     res.end('No encontrado');
   }
-}).listen(port, '127.0.0.1', () => console.log('Bitácora: http://localhost:' + port));
+}).listen(port, '127.0.0.1', () => console.log('Routale: http://localhost:' + port));

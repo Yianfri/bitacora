@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Uso en la carpeta de Dockge: bash update.sh ghcr.io/yianfri/bitacora:sha-COMMIT
+# Uso en la carpeta de Dockge: bash update.sh ghcr.io/yianfri/routale:sha-COMMIT
 set -euo pipefail
 image="${1:?Indica una imagen exacta}"
 if [[ ! "$image" =~ ^ghcr\.io/[a-z0-9_-]+/[a-z0-9_-]+(:sha-[a-f0-9]{40}|@sha256:[a-f0-9]{64})$ ]]; then
@@ -22,4 +22,4 @@ if ! docker compose up -d --wait --wait-timeout 90; then
   printf '%s\n' "La actualización falló; se volvió a $previous." >&2
   exit 1
 fi
-printf '%s\n' "Bitácora actualizada a $image. La copia anterior de .env permite volver atrás."
+printf '%s\n' "Routale actualizada a $image. La copia anterior de .env permite volver atrás."

@@ -45,7 +45,7 @@ export class CuadernoService {
     const url = URL.createObjectURL(blob),
       link = document.createElement('a');
     link.href = url;
-    link.download = `bitacora-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `routale-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }

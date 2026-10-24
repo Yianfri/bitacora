@@ -1,4 +1,4 @@
-# Dirección visual de Bitácora
+# Dirección visual de Routale
 
 Estado: el concepto aprobado está implementado en Angular con adaptación de
 escritorio, tablet y móvil. Las láminas conceptuales se mantienen como referencia;
@@ -84,7 +84,7 @@ pasar a un contenedor nativo exige conservar y trasladar los datos de forma expl
 
 Un APK mediante TWA o Capacitor queda como opción posterior. TWA vincula un sitio
 HTTPS con una aplicación Android; Capacitor añade un proyecto nativo y permite
-integrar plugins. Ninguno se ha instalado ni empaquetado para Bitácora. La decisión
+integrar plugins. Ninguno se ha instalado ni empaquetado para Routale. La decisión
 se revisará si hacen falta funciones nativas o distribución en una tienda.
 
 Instalar la PWA no conecta los datos entre PC y móvil. La API de copias privadas
@@ -117,7 +117,7 @@ las jornadas y las herramientas auxiliares mediante estilo y jerarquía.
 
 Estas referencias orientan decisiones; no se copiarán marcas, imágenes ni código.
 Las funciones descritas por sus fabricantes no equivalen a pruebas de usabilidad
-propias ni a funciones implementadas en Bitácora.
+propias ni a funciones implementadas en Routale.
 
 | Referencia                                     | Qué estudiar                     | Aplicación propuesta                                                                |
 | ---------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------- |

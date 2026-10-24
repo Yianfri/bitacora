@@ -11,7 +11,7 @@ const fixture = JSON.parse(await readFile(resolve(root, 'frontend/public/seed.js
 assert.deepEqual(fixture, expected, 'La semilla pública debe ser exactamente la demo ficticia.');
 if (process.argv.includes('--build')) {
   const built = JSON.parse(
-    await readFile(resolve(root, 'frontend/dist/bitacora/browser/seed.json'), 'utf8'),
+    await readFile(resolve(root, 'frontend/dist/routale/browser/seed.json'), 'utf8'),
   );
   assert.deepEqual(built, expected, 'La compilación contiene una semilla distinta de la demo.');
 }
@@ -38,9 +38,9 @@ const rootFiles = new Set([
 ]);
 const publicFiles = new Set([
   'frontend/public/brand.png',
-  'frontend/public/bitacora-icon.svg',
-  'frontend/public/bitacora-icon-192.png',
-  'frontend/public/bitacora-icon-512.png',
+  'frontend/public/routale-icon.svg',
+  'frontend/public/routale-icon-192.png',
+  'frontend/public/routale-icon-512.png',
   'frontend/public/favicon.ico',
   'frontend/public/manifest.webmanifest',
   'frontend/public/route-cover.png',
@@ -100,7 +100,7 @@ if (process.argv.includes('--build')) {
       }
     }
   }
-  await inspect(resolve(root, 'frontend/dist/bitacora/browser'));
+  await inspect(resolve(root, 'frontend/dist/routale/browser'));
 }
 console.log(
   `Revisión de publicación: ${files.length} archivos permitidos y demo ficticia verificada.`,

@@ -36,16 +36,16 @@ jobs:
       - name: Comprobar receta Docker
         working-directory: .
         run: |
-          docker build --tag bitacora:check .
-          docker run --detach --name bitacora-check --publish 127.0.0.1:8088:8080 --health-interval=1s --health-start-period=1s bitacora:check
-          trap 'docker stop bitacora-check > /dev/null' EXIT
-          docker exec bitacora-check nginx -t
+          docker build --tag routale:check .
+          docker run --detach --name routale-check --publish 127.0.0.1:8088:8080 --health-interval=1s --health-start-period=1s routale:check
+          trap 'docker stop routale-check > /dev/null' EXIT
+          docker exec routale-check nginx -t
           for attempt in {1..30}; do
-            if [ "$(docker inspect --format '{{.State.Health.Status}}' bitacora-check)" = healthy ]; then break; fi
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' routale-check)" = healthy ]; then break; fi
             sleep 1
           done
-          if [ "$(docker inspect --format '{{.State.Health.Status}}' bitacora-check)" != healthy ]; then
-            docker logs bitacora-check
+          if [ "$(docker inspect --format '{{.State.Health.Status}}' routale-check)" != healthy ]; then
+            docker logs routale-check
             exit 1
           fi
           curl --fail http://127.0.0.1:8088/health

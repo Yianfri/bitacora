@@ -1,4 +1,4 @@
-# Backend de Bitácora
+# Backend de Routale
 
 ASP.NET Core .NET 10, EF Core 10.0.8 y SQLite. Cuentas administrativas,
 sesiones revocables y copias privadas por propietario. SDK fijado en global.json.

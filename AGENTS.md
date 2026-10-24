@@ -1,4 +1,4 @@
-# Bitácora: reglas del repositorio
+# Routale: reglas del repositorio
 
 Angular/PWA para planificar viajes y registrar un diario local. Leer
 `frontend/AGENTS.md` antes de editar la aplicación.

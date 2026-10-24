@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Bitácora",
-  "short_name": "Bitácora",
+  "name": "Routale",
+  "short_name": "Routale",
   "description": "Planifica tus rutas y guarda cada jornada en un diario de viaje local.",
   "start_url": "/",
   "scope": "/",
@@ -11,19 +11,19 @@
   "lang": "es-CL",
   "icons": [
     {
-      "src": "bitacora-icon-192.png",
+      "src": "routale-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "bitacora-icon-512.png",
+      "src": "routale-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "bitacora-icon.svg",
+      "src": "routale-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

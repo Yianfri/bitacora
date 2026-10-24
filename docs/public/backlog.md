@@ -23,7 +23,7 @@
 - Pruebas de dominio, concurrencia, respaldo, teclado y recorrido offline en navegador.
 - CI remoto comprobado: formato, código, tipos, 17 pruebas de dominio, 6 recorridos
   en Chromium, compilación, revisión de publicación, construcción Docker y salud HTTP.
-  [Ejecución aprobada de la versión 1565bcf](https://github.com/Yianfri/bitacora/actions/runs/38162052646).
+  [Ejecución aprobada de la versión 1565bcf](https://github.com/Yianfri/routale/actions/runs/38162052646).
 - Publicación de imagen preparada y desactivada; despliegue al servidor pendiente.
 - Backend ASP.NET Core .NET 10 y SQLite: cuentas administrativas, sesiones
   revocables, antiforgery, aislamiento por usuario, listado y guardado/recuperación
@@ -32,8 +32,8 @@
   contra SQLite real, incluidos datos inválidos, concurrencia, reinicio y logout.
 - CI del backend y frontend aprobado para 9e3a78b: formato, compilación y 13
   pruebas de API en Linux, más los recorridos PWA y comprobación Docker existentes.
-  [Ejecución aprobada](https://github.com/Yianfri/bitacora/actions/runs/38168967249).
-  Código incorporado a main mediante [PR 1](https://github.com/Yianfri/bitacora/pull/1).
+  [Ejecución aprobada](https://github.com/Yianfri/routale/actions/runs/38168967249).
+  Código incorporado a main mediante [PR 1](https://github.com/Yianfri/routale/pull/1).
 
 ### Correcciones de seguridad
 
