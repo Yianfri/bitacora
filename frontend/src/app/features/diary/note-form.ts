@@ -5,93 +5,255 @@ import { NoteInput } from '../../core/domain/model';
 @Component({
   selector: 'app-note-form',
   imports: [FormsModule],
-  template: ` <section class="card note-form" aria-labelledby="note-title">
-    <button type="button" class="text-button" (click)="close.emit()">
-      ← Volver al día · se conserva el borrador
+  template: `<section class="note-form" aria-labelledby="note-title">
+    <button type="button" class="back-button" [disabled]="busy()" (click)="close.emit()">
+      <span aria-hidden="true">←</span> Volver · se conserva el borrador
     </button>
-    <p class="eyebrow">Diario de ruta</p>
-    <h1 id="note-title">{{ initial().entryId ? 'Editar mi nota' : 'Anotar este día' }}</h1>
-    <p class="muted">{{ stageName() }}</p>
+
+    <header class="form-heading">
+      <p class="eyebrow">Diario de ruta</p>
+      <h1 id="note-title">{{ initial().entryId ? 'Editar mi nota' : 'Anotar este día' }}</h1>
+      <p class="stage-name">{{ stageName() || 'Jornada seleccionada' }}</p>
+      <p class="form-intro">
+        El borrador se conserva en este dispositivo. La nota del diario se guarda o actualiza sólo
+        después de completar el guardado.
+      </p>
+    </header>
+
     <form (ngSubmit)="submit()">
       <div class="form-grid">
-        <label
-          >Fecha real<input
+        <label class="field" for="actual-date">
+          <span id="actual-date-label">Fecha real</span>
+          <input
+            id="actual-date"
             name="date"
             type="date"
             required
-            [disabled]="!!initial().entryId"
+            [disabled]="busy() || !!initial().entryId"
             [ngModel]="date"
             (ngModelChange)="changeDate($event)"
-        /></label>
-        <label
-          >Kilómetros reales del día<input
+            aria-describedby="date-help"
+            aria-labelledby="actual-date-label"
+          />
+          <small id="date-help">
+            {{
+              initial().entryId
+                ? 'La fecha se conserva al editar esta nota.'
+                : 'Usa la fecha local del día que registras.'
+            }}
+          </small>
+        </label>
+
+        <label class="field" for="actual-km">
+          <span id="actual-km-label">Kilómetros reales del día</span>
+          <input
+            id="actual-km"
             name="km"
             type="number"
+            [disabled]="busy()"
             min="0"
             step="0.1"
             [ngModel]="km"
             (ngModelChange)="km = $event; draft()"
             placeholder="Sin registrar"
-        /></label>
+            aria-describedby="km-help"
+            aria-labelledby="actual-km-label"
+          />
+          <small id="km-help">
+            Vacío = sin registrar; 0 = cero kilómetros. Se comparte entre todas las notas de esa
+            fecha.
+          </small>
+        </label>
       </div>
-      <p class="hint">
-        Este kilometraje lo comparten todas las notas de esa fecha. Vacío = sin registrar; 0 = cero
-        kilómetros.
-      </p>
-      <label
-        >Tu nota<textarea
+
+      <label class="field note-field" for="note-text">
+        <span id="note-text-label">Tu nota</span>
+        <textarea
+          id="note-text"
           name="text"
+          [disabled]="busy()"
           rows="7"
           maxlength="1200"
           required
           [ngModel]="text"
           (ngModelChange)="text = $event; draft()"
           placeholder="Cómo estuvo el camino, qué descubriste, qué conviene recordar…"
+          aria-describedby="note-help note-count"
+          aria-labelledby="note-text-label"
         ></textarea>
+        <small id="note-help"
+          >Una nota adicional no completa la etapa ni duplica el kilometraje.</small
+        >
+        <small id="note-count">{{ text.length }} / 1200 · {{ draftStatus() }}</small>
       </label>
-      <p class="hint">{{ text.length }} / 1200 · {{ draftStatus() }}</p>
+
       @if (error()) {
-        <p role="alert" class="error">{{ error() }}</p>
+        <p id="note-error" class="error-message" role="alert">{{ error() }}</p>
       }
+
       <div class="actions">
-        <button class="primary" type="submit" [disabled]="busy() || !text.trim()">
-          {{ busy() ? 'Guardando…' : 'Guardar en este dispositivo' }}</button
-        ><button type="button" (click)="close.emit()">Volver</button>
+        <button class="primary save-button" type="submit" [disabled]="busy() || !text.trim()">
+          {{ busy() ? 'Guardando…' : 'Guardar en este dispositivo' }}
+        </button>
+        <button class="return-button" type="button" [disabled]="busy()" (click)="close.emit()">
+          Volver
+        </button>
       </div>
     </form>
   </section>`,
   styles: `
     .note-form {
-      max-width: 720px;
-      margin: 0 auto;
+      width: min(100%, 720px);
+      margin: clamp(16px, 4vw, 44px) auto;
+      padding: clamp(20px, 4vw, 42px);
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 44px;
+      margin: -8px 0 24px;
+      padding: 6px 4px;
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 600;
+      text-align: left;
+    }
+    .back-button:hover {
+      background: transparent;
+      color: var(--accent-hover);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .back-button span {
+      font-size: 1.25rem;
+    }
+    .eyebrow {
+      margin: 0;
+      color: var(--brand);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 6px 0 4px;
+      font-family: inherit;
+      font-size: clamp(1.85rem, 5vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+    }
+    .stage-name {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+      font-weight: 600;
+    }
+    .form-intro {
+      max-width: 60ch;
+      margin: 14px 0 26px;
+      color: var(--muted);
     }
     .form-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      padding: 20px 0 10px;
+      border-top: 1px solid var(--line);
     }
-    .hint {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    label {
-      display: block;
-      margin: 16px 0;
+    .field {
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      min-width: 0;
+      margin: 0 0 20px;
       font-weight: 600;
+    }
+    .field > span {
+      line-height: 1.4;
     }
     input,
     textarea {
       display: block;
       width: 100%;
-      margin-top: 8px;
+      margin: 0;
+      min-height: 48px;
+      padding: 11px 12px;
+      border-color: var(--line);
+      background: var(--paper);
+      font-weight: 400;
     }
     textarea {
+      min-height: 180px;
       resize: vertical;
+      line-height: 1.6;
     }
-    @media (max-width: 480px) {
+    .field small {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+    .note-field {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    #note-count {
+      padding-top: 2px;
+    }
+    .error-message {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--error-ink);
+      border-radius: 8px;
+      color: var(--error-ink);
+      background: var(--error-bg);
+      overflow-wrap: anywhere;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .actions button {
+      min-height: 48px;
+    }
+    .save-button {
+      flex: 1 1 auto;
+    }
+    .return-button {
+      min-width: 100px;
+    }
+    @media (max-width: 560px) {
+      .note-form {
+        margin: 12px 0;
+        padding: 20px 16px;
+        border-radius: var(--radius);
+      }
       .form-grid {
         grid-template-columns: 1fr;
         gap: 0;
+      }
+      .form-intro {
+        margin-bottom: 20px;
+      }
+    }
+    @media (max-width: 380px) {
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .return-button {
+        width: 100%;
       }
     }
   `,
@@ -117,6 +279,8 @@ export class NoteForm implements OnInit {
     this.date = input.date;
     this.km = input.cyclingKm;
     this.text = input.text;
+    if (input.entryId)
+      this.draftStatus.set('La nota guardada no cambia hasta completar el guardado');
     try {
       const draft: unknown = JSON.parse(localStorage.getItem(this.key()) ?? 'null');
       if (
@@ -133,7 +297,11 @@ export class NoteForm implements OnInit {
         this.date = draft.date;
         this.text = draft.text;
         this.km = draft.km;
-        this.draftStatus.set('Borrador recuperado en este dispositivo');
+        this.draftStatus.set(
+          input.entryId
+            ? 'Cambios recuperados como borrador; la nota guardada aún no cambia'
+            : 'Borrador recuperado en este dispositivo',
+        );
       }
     } catch {
       this.draftStatus.set('Borrador sólo en esta pantalla');
@@ -150,7 +318,11 @@ export class NoteForm implements OnInit {
         this.key(),
         JSON.stringify({ date: this.date, km: this.km, text: this.text }),
       );
-      this.draftStatus.set('Borrador conservado · aún no es una nota guardada');
+      this.draftStatus.set(
+        this.initial().entryId
+          ? 'Cambios conservados como borrador; la nota guardada aún no cambia'
+          : 'Borrador conservado; aún no es una nota guardada',
+      );
     } catch {
       this.draftStatus.set('No pudimos conservar el borrador; mantén esta pantalla abierta');
     }

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Bitácora: cuaderno con una ruta">
+  <rect width="512" height="512" fill="#f6f2ec" />
+  <path
+    d="M96 138c0-24 17-42 43-42 47 0 84 16 117 46 33-30 70-46 117-46 26 0 43 18 43 42v224c0 23-18 39-41 34-48-11-88-6-119 23-31-29-71-34-119-23-23 5-41-11-41-34z"
+    fill="none"
+    stroke="#27383a"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="24"
+  />
+  <path d="M256 142v276" fill="none" stroke="#27383a" stroke-linecap="round" stroke-width="22" />
+  <path
+    d="M139 286c28-38 49 25 82-9 32-34 47 10 77-3 25-11 32-34 55-54"
+    fill="none"
+    stroke="#b44b2a"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="20"
+  />
+  <circle cx="139" cy="286" r="13" fill="#b44b2a" />
+  <circle cx="353" cy="220" r="20" fill="#b44b2a" />
+</svg>

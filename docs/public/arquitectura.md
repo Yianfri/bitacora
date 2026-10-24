@@ -1,5 +1,11 @@
 # Arquitectura implementada
 
+La [decisión de arquitectura y evolución](decision-arquitectura.md) fija la
+dirección elegida para la siguiente entrega: PWA instalable, trabajo local y
+copias privadas en Linux. Distingue el modelo actual de las propuestas futuras,
+las relaciones de datos y los criterios para crecer. Esta página describe lo
+que está implementado; no implica que esa integración o despliegue ya existan.
+
 Frontend Angular 22.2.2 standalone, TypeScript estricto y PWA mediante Angular
 Service Worker. Backend ASP.NET Core .NET 10 con EF Core 10 y SQLite como servicio separado;
 Angular todavía no consume la API y no hay sincronización automática.

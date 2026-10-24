@@ -17,6 +17,30 @@ público al Linux personal. La automatización remota se implementará después 
 probar el despliegue manual y su recuperación. No activar las antiguas variables
 ENABLE_SERVER_DEPLOY ni ENABLE_AUTO_DEPLOY; ya no controlan un workflow remoto.
 
+## Utilidad del servidor para la siguiente iteración
+
+La [decisión de arquitectura](decision-arquitectura.md) define el alcance inicial
+personal, el trabajo offline, el servicio de copias y los criterios de evolución.
+La topología descrita allí es objetivo, no una stack completa ya desplegada.
+
+La revisión de diseño y distribución mantiene Linux como una opción útil, sin
+dependencia para trabajar sin red tras preparar la PWA. Alojar solo el frontend
+permite abrir una versión central de la aplicación; las notas siguen siendo
+copias independientes de cada navegador/dispositivo. El valor adicional para
+PC y móvil llegará al integrar guardar y recuperar copias autenticadas mediante
+la API existente. Eso tampoco equivale a sincronización automática.
+
+Primero se propone ensayar el nuevo diseño y la integración de copias con datos
+ficticios en el PC. Después, identificar el equipo Linux real, comprobar sistema,
+arquitectura, recursos, puertos y servicios existentes, y definir persistencia de
+SQLite, claves y recuperación. Esta revisión fue documental: no se conectó al
+equipo ni se comprobó su capacidad. Tampoco se activaron servicios ni se ejecutó
+Docker remoto.
+
+La receta actual sigue desplegando solo frontend; completar la API, su proxy y
+sus volúmenes es trabajo pendiente. La guía pública vigente sustituye cualquier
+plan anterior de ejecutor self-hosted en el servidor personal.
+
 ## Acceso recomendado: Tailscale Serve
 
 Mantener web/proxy en loopback y API/base en la red privada de contenedores.

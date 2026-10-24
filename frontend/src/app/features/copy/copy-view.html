@@ -1,0 +1,106 @@
+<section class="content-view copy-view" aria-labelledby="copy-title">
+  <header class="view-heading">
+    <p class="eyebrow">Tus datos locales</p>
+    <h1 id="copy-title">Mi copia</h1>
+    <p class="muted">
+      Este navegador guarda tu cuaderno. Para usarlo en otro dispositivo, exporta y restaura una
+      copia manualmente.
+    </p>
+  </header>
+  <div class="copy-grid">
+    <section class="copy-card" aria-labelledby="export-title">
+      <div class="copy-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3v12m-5-5 5 5 5-5" />
+          <path d="M5 16v4h14v-4" />
+        </svg>
+      </div>
+      <p class="eyebrow">Llevar una copia</p>
+      <h2 id="export-title">Exportar respaldo</h2>
+      <p>
+        Descarga el plan, las notas y los kilómetros guardados. Conserva el archivo en un lugar
+        privado.
+      </p>
+      <button class="primary" type="button" (click)="exportBackup.emit()">Exportar respaldo</button>
+    </section>
+    <section class="copy-card" aria-labelledby="restore-title">
+      <div class="copy-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 21V9m5 5-5-5-5 5" />
+          <path d="M5 8V4h14v4" />
+        </svg>
+      </div>
+      <p class="eyebrow">Traer una copia</p>
+      <h2 id="restore-title">Restaurar respaldo</h2>
+      <p>
+        El archivo se valida antes de escribir. Si reemplaza este viaje, revisarás los cambios antes
+        de confirmar.
+      </p>
+      <label class="file-button">
+        Elegir archivo de respaldo
+        <input
+          type="file"
+          accept="application/json,.json"
+          (change)="restoreFile.emit($event)"
+          [disabled]="busy()"
+        />
+      </label>
+    </section>
+    <section class="copy-card offline-card" aria-labelledby="offline-title">
+      <div class="copy-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9a14 14 0 0 1 18 0M6.5 12.5a9 9 0 0 1 11 0M10 16a3.5 3.5 0 0 1 4 0" />
+          <path d="m3 3 18 18" />
+        </svg>
+      </div>
+      <p class="eyebrow">Disponibilidad local</p>
+      <h2 id="offline-title">Preparación sin conexión</h2>
+      <p>
+        {{
+          offlineReady()
+            ? 'La aplicación está almacenada y hay datos locales presentes.'
+            : 'La preparación sin conexión aún no está confirmada en este entorno.'
+        }}
+      </p>
+      <p class="hint">
+        {{ online() ? 'Con conexión disponible ahora.' : 'Sin conexión a internet ahora.' }}
+        Para recuperar el cuaderno en otro dispositivo necesitas un respaldo exportado.
+      </p>
+      <button type="button" [disabled]="busy()" (click)="checkPreparation.emit()">
+        {{ busy() ? 'Comprobando…' : 'Comprobar preparación' }}
+      </button>
+    </section>
+    <section class="copy-card" aria-labelledby="install-title">
+      <div class="copy-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 16V4m-5 5 5-5 5 5" />
+          <path d="M5 13v6h14v-6" />
+        </svg>
+      </div>
+      <p class="eyebrow">Acceso directo</p>
+      <h2 id="install-title">Instalar Bitácora</h2>
+      @if (isInstalled() || isStandalone()) {
+        <p>Bitácora ya está instalada o abierta como aplicación en este dispositivo.</p>
+      } @else if (canInstall()) {
+        <p>Instala Bitácora para abrir el cuaderno desde la pantalla de inicio.</p>
+        <button class="primary" type="button" (click)="installApp.emit()">
+          Instalar aplicación
+        </button>
+      } @else {
+        <p>{{ installGuidance() }}</p>
+      }
+    </section>
+  </div>
+  @if (isDemo()) {
+    <div class="demo-action">
+      <span>El plan de ejemplo contiene datos ficticios.</span>
+      <button type="button" [disabled]="busy()" (click)="previewDemo.emit()">
+        Revisar viaje de ejemplo
+      </button>
+    </div>
+  }
+  <p class="privacy-note">
+    PC y teléfono tienen copias independientes; aún no se sincronizan. La conexión de red no guarda
+    una copia automáticamente.
+  </p>
+</section>

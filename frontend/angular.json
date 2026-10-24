@@ -45,7 +45,7 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
-                "glob": "{brand.png,favicon.ico,manifest.webmanifest,seed.json}",
+                "glob": "{brand.png,bitacora-icon.svg,bitacora-icon-192.png,bitacora-icon-512.png,favicon.ico,manifest.webmanifest,route-cover.png,seed.json}",
                 "input": "public"
               }
             ],

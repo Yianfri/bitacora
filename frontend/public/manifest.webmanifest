@@ -1,1 +1,32 @@
-{"id":"/","name":"Bitácora","short_name":"Bitácora","start_url":"/","scope":"/","display":"standalone","background_color":"#f4f8f8","theme_color":"#174e59","lang":"es-CL","icons":[{"src":"brand.png","sizes":"1254x1254","type":"image/png","purpose":"any"}]}
+{
+  "id": "/",
+  "name": "Bitácora",
+  "short_name": "Bitácora",
+  "description": "Planifica tus rutas y guarda cada jornada en un diario de viaje local.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f2ec",
+  "theme_color": "#b44b2a",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "bitacora-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "bitacora-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "bitacora-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

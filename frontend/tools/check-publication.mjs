@@ -17,7 +17,11 @@ if (process.argv.includes('--build')) {
 }
 
 // An allowlist prevents accidental publication of local planning folders or exports.
-const files = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' })
+const files = execFileSync(
+  'git',
+  ['ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+  { cwd: root, encoding: 'utf8' },
+)
   .split('\0')
   .filter(Boolean);
 assert(files.length > 0, 'Revisar archivos preparados para Git antes de publicar.');
@@ -32,11 +36,19 @@ const rootFiles = new Set([
   'global.json',
   'dotnet-tools.json',
 ]);
+const publicFiles = new Set([
+  'frontend/public/brand.png',
+  'frontend/public/bitacora-icon.svg',
+  'frontend/public/bitacora-icon-192.png',
+  'frontend/public/bitacora-icon-512.png',
+  'frontend/public/favicon.ico',
+  'frontend/public/manifest.webmanifest',
+  'frontend/public/route-cover.png',
+]);
 const allowed = (path) =>
   rootFiles.has(path) ||
-  /^frontend\/(src\/|tools\/|tests\/|public\/(brand\.png|favicon\.ico|manifest\.webmanifest)$)/.test(
-    path,
-  ) ||
+  publicFiles.has(path) ||
+  /^frontend\/(?:src|tools|tests)\//.test(path) ||
   /^frontend\/(\.editorconfig|\.gitignore|\.prettierignore|\.prettierrc|\.vscode\/(extensions|launch|tasks)\.json)$/.test(
     path,
   ) ||
