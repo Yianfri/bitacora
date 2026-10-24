@@ -1,33 +1,11 @@
 <a class="skip" href="#main">Ir al cuaderno</a>
-<header class="header">
-  <a class="brand" href="/"
-    ><img src="brand.png" alt="" width="58" height="58" /><span
-      ><strong>Bitácora</strong><small>Planificación y diario</small></span
-    ></a
-  ><span class="device-status">{{
-    online() ? 'En este dispositivo' : 'Sin conexión · guardado local'
-  }}</span>
-</header>
-<main id="main">
-  @if (error()) {
-    <div class="alert error" role="alert">{{ error() }}</div>
-  }
+@if (cuaderno.loading()) {
+  <main id="main" class="opening-state"><p role="status">Abriendo tu cuaderno…</p></main>
+} @else if (note(); as input) {
   @if (message()) {
-    <div class="alert success" role="status">{{ message() }}</div>
+    <div class="alert success global-alert" role="status">{{ message() }}</div>
   }
-  @if (updateReady()) {
-    <div class="alert">
-      Hay una versión nueva disponible.
-      @if (note()) {
-        Termina o conserva tu borrador antes de actualizar.
-      } @else {
-        <button (click)="refresh()">Actualizar aplicación</button>
-      }
-    </div>
-  }
-  @if (cuaderno.loading()) {
-    <p role="status">Abriendo tu cuaderno…</p>
-  } @else if (note(); as input) {
+  <main id="main" class="form-page">
     <app-note-form
       [initial]="input"
       [stageName]="noteStageName()"
@@ -36,101 +14,238 @@
       [busy]="busy()"
       [error]="error()"
       (save)="save($event)"
-      (close)="note.set(null); error.set('')"
+      (close)="closeNote()"
     />
-  } @else {
-    @if (pending(); as backup) {
-      <section class="card import-review" aria-labelledby="import-title">
-        <p class="eyebrow">Revisar antes de guardar</p>
-        <h1 id="import-title">
-          {{ pendingType() === 'seed' ? 'Viaje de ejemplo' : 'Restaurar una copia' }}
-        </h1>
-        <p>
-          {{ backup.data.trip.name }} · {{ backup.data.plannedDays.length }} jornadas ·
-          {{ backup.data.diaryEntries.length }} notas · {{ backup.data.places.length }} lugares
-        </p>
-        <p class="muted">
+  </main>
+} @else if (pending(); as backup) {
+  @if (error()) {
+    <div class="alert error global-alert" role="alert">{{ error() }}</div>
+  }
+  @if (message()) {
+    <div class="alert success global-alert" role="status">{{ message() }}</div>
+  }
+  <main id="main" class="single-page">
+    <section class="card import-review" aria-labelledby="import-title">
+      <p class="eyebrow">Revisar antes de guardar</p>
+      <h1 id="import-title">
+        {{ pendingType() === 'seed' ? 'Viaje de ejemplo' : 'Restaurar una copia' }}
+      </h1>
+      <p>
+        {{ backup.data.trip.name }} · {{ backup.data.plannedDays.length }} jornadas ·
+        {{ backup.data.diaryEntries.length }} notas · {{ backup.data.places.length }} lugares
+      </p>
+      <p class="muted">
+        {{
+          pendingType() === 'seed'
+            ? 'Ejemplo ficticio para probar la aplicación. No corresponde a un viaje real.'
+            : 'Respaldo completo: ' + backup.exportedAt
+        }}
+      </p>
+      @if (pendingType() === 'restore' && cuaderno.data()?.trip?.id === backup.data.trip.id) {
+        <div class="alert warning">
+          Se reemplazará tu copia de este viaje, incluyendo notas y kilómetros. Las ediciones
+          posteriores a este respaldo se perderán. Exporta tu copia actual antes si quieres
+          conservarla.
+        </div>
+        <button type="button" (click)="export()">Exportar mi copia actual</button>
+      }
+      <p class="hint">
+        Todo se guarda en este navegador. PC y teléfono tienen copias independientes; aún no se
+        sincronizan.
+      </p>
+      <div class="actions">
+        <button class="primary" type="button" [disabled]="busy()" (click)="confirm()">
           {{
-            pendingType() === 'seed'
-              ? 'Ejemplo ficticio para probar la aplicación. No corresponde a un viaje real.'
-              : 'Respaldo completo: ' + backup.exportedAt
+            busy()
+              ? 'Guardando…'
+              : pendingType() === 'seed'
+                ? 'Importar este plan'
+                : 'Restaurar esta copia'
           }}
+        </button>
+        <button type="button" [disabled]="busy()" (click)="pending.set(null)">Cancelar</button>
+      </div>
+    </section>
+  </main>
+} @else if (cuaderno.data(); as data) {
+  <div
+    class="app-frame"
+    [class.section-day]="section() === 'day'"
+    [class.section-itinerary]="section() === 'itinerary'"
+  >
+    <aside class="primary-nav" aria-label="Navegación principal">
+      <a class="brand" href="/" aria-label="Bitácora, inicio">
+        <img src="bitacora-icon.svg" alt="" width="46" height="46" />
+        <span><strong>Bitácora</strong><small>Cuaderno de viaje</small></span>
+      </a>
+      <nav class="rail-links" aria-label="Secciones">
+        <button
+          type="button"
+          [class.current]="section() === 'day'"
+          [attr.aria-current]="section() === 'day' ? 'page' : null"
+          (click)="goTo('day')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 19 7-14 3.5 7 2-3L21 19H3Z" />
+            <path d="M10 16h.01M15 16h.01" />
+          </svg>
+          <span>Jornada</span>
+        </button>
+        <button
+          type="button"
+          [class.current]="section() === 'itinerary'"
+          [attr.aria-current]="section() === 'itinerary' ? 'page' : null"
+          (click)="goTo('itinerary')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+            <path d="M9 3v15m6-12v15" />
+          </svg>
+          <span>Itinerario</span>
+        </button>
+        <button
+          type="button"
+          [class.current]="section() === 'diary'"
+          [attr.aria-current]="section() === 'diary' ? 'page' : null"
+          (click)="goTo('diary')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M4 5.5c3.2-1.6 6-.8 8 1.3v14c-2-2.1-4.8-2.9-8-1.3v-14Zm16 0c-3.2-1.6-6-.8-8 1.3v14c2-2.1 4.8-2.9 8-1.3v-14Z"
+            />
+          </svg>
+          <span>Diario</span>
+        </button>
+      </nav>
+      <div class="rail-bottom">
+        <button
+          type="button"
+          [class.current]="section() === 'copy'"
+          [attr.aria-current]="section() === 'copy' ? 'page' : null"
+          (click)="goTo('copy')"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="7" width="14" height="14" rx="2" />
+            <path d="M17 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" />
+          </svg>
+          <span>Mi copia</span>
+        </button>
+        <p class="rail-status">
+          <span class="status-dot" aria-hidden="true"></span
+          >{{ online() ? 'Datos en este dispositivo' : 'Sin conexión · datos locales' }}
         </p>
-        @if (pendingType() === 'restore' && cuaderno.data()?.trip?.id === backup.data.trip.id) {
-          <div class="alert warning">
-            Se reemplazará tu copia de este viaje, incluyendo notas y kilómetros. Las ediciones
-            posteriores a este respaldo se perderán. Exporta tu copia actual antes si quieres
-            conservarla.
-          </div>
-          <button (click)="export()">Exportar mi copia actual</button>
-        }
-        <p class="hint">
-          Todo se guarda en este navegador. PC y teléfono tienen copias independientes; aún no se
-          sincronizan.
-        </p>
-        <div class="actions">
-          <button class="primary" [disabled]="busy()" (click)="confirm()">
-            {{
-              busy()
-                ? 'Guardando…'
-                : pendingType() === 'seed'
-                  ? 'Importar este plan'
-                  : 'Restaurar esta copia'
-            }}</button
-          ><button [disabled]="busy()" (click)="pending.set(null)">Cancelar</button>
+      </div>
+    </aside>
+
+    <main id="main" class="main-content">
+      <header class="compact-header">
+        <a class="brand" href="/" aria-label="Bitácora, inicio">
+          <img src="bitacora-icon.svg" alt="" width="38" height="38" />
+          <span><strong>Bitácora</strong></span>
+        </a>
+        <span class="device-status">{{
+          online() ? 'En este dispositivo' : 'Sin conexión · local'
+        }}</span>
+        <button
+          class="copy-shortcut"
+          type="button"
+          (click)="goTo('copy')"
+          aria-label="Abrir Mi copia"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="7" width="14" height="14" rx="2" />
+            <path d="M17 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2" />
+          </svg>
+          <span>Mi copia</span>
+        </button>
+      </header>
+
+      <nav class="compact-nav" aria-label="Secciones">
+        <button
+          type="button"
+          [class.current]="section() === 'day'"
+          [attr.aria-current]="section() === 'day' ? 'page' : null"
+          (click)="goTo('day')"
+        >
+          Jornada
+        </button>
+        <button
+          type="button"
+          [class.current]="section() === 'itinerary'"
+          [attr.aria-current]="section() === 'itinerary' ? 'page' : null"
+          (click)="goTo('itinerary')"
+        >
+          Itinerario
+        </button>
+        <button
+          type="button"
+          [class.current]="section() === 'diary'"
+          [attr.aria-current]="section() === 'diary' ? 'page' : null"
+          (click)="goTo('diary')"
+        >
+          Diario
+        </button>
+        <button
+          type="button"
+          [class.current]="section() === 'copy'"
+          [attr.aria-current]="section() === 'copy' ? 'page' : null"
+          (click)="goTo('copy')"
+        >
+          Mi copia
+        </button>
+      </nav>
+
+      @if (error()) {
+        <div class="alert error" role="alert">{{ error() }}</div>
+      }
+      @if (message()) {
+        <div class="alert success" role="status">{{ message() }}</div>
+      }
+      @if (updateReady()) {
+        <div class="alert update-alert" role="status">
+          Hay una versión nueva disponible.
+          @if (note()) {
+            Termina o conserva tu borrador antes de actualizar.
+          } @else {
+            <button type="button" (click)="refresh()">Actualizar aplicación</button>
+          }
         </div>
-      </section>
-    } @else if (cuaderno.data(); as data) {
-      <section class="overview card">
-        <div>
-          <p class="eyebrow">Mi viaje · {{ data.trip.startDate.slice(0, 4) }}</p>
-          <h1>Mi viaje</h1>
-          <p class="route">{{ data.trip.name }}</p>
-          <p class="muted">
-            {{ dateLabel(data.trip.startDate, true) }} — {{ dateLabel(data.trip.endDate, true) }}
-          </p>
-        </div>
-        <div class="stats">
-          <div>
-            <strong>{{ days().length }}</strong
-            ><span>jornadas previstas</span>
-          </div>
-          <div>
-            <strong>{{ distance(estimated()) }}</strong
-            ><span>pedaleo estimado</span>
-          </div>
-          <div>
-            <strong>{{ distance(real()) }}</strong
-            ><span>registrados · {{ data.actualDays.length }} fechas</span>
-          </div>
-        </div>
-      </section>
+      }
+
       @if (data.trip.isDemo) {
-        <aside class="alert">
+        <aside class="alert demo-banner">
           <strong>Demo · datos ficticios</strong>
-          <p>Fechas, etapas y montos de ejemplo. Para tu viaje, importa una copia privada.</p>
+          <span>Plan ficticio para probar Bitácora.</span>
         </aside>
       }
       @if (data.trip.returnStatus === 'in-review') {
-        <aside class="alert warning">
+        <aside class="alert warning return-banner">
           <strong>Plan de referencia · Regreso en revisión</strong>
-          <p>
-            El regreso de este plan está en revisión. Comprueba fechas, transportes y reservas antes
-            de usarlo durante el viaje.
-          </p>
+          <span>Comprueba fechas, transportes y reservas antes de usarlo durante el viaje.</span>
         </aside>
       }
-      <div class="workspace">
-        <section class="card itinerary" aria-labelledby="itinerary-title">
-          <div class="section-top">
-            <div>
-              <p class="eyebrow">Calendario</p>
-              <h2 id="itinerary-title">Mi itinerario</h2>
+
+      @if (section() === 'day' || section() === 'itinerary') {
+        <div
+          class="workspace"
+          [class.mobile-day]="section() === 'day'"
+          [class.mobile-itinerary]="section() === 'itinerary'"
+        >
+          <section class="day-index" aria-labelledby="itinerary-title">
+            <div class="index-heading">
+              <p class="eyebrow">{{ data.trip.isDemo ? 'Ejemplo ficticio' : 'Mi viaje' }}</p>
+              <h1 id="itinerary-title">Mi itinerario</h1>
+              <p class="trip-name">{{ data.trip.name }}</p>
+              <p class="trip-dates">
+                {{ dateLabel(data.trip.startDate, true) }} —
+                {{ dateLabel(data.trip.endDate, true) }}
+              </p>
             </div>
-            <label class="date-select"
-              >Ir a una fecha<select
+            <label class="date-select">
+              Ir a una fecha
+              <select
                 aria-label="Ir a una fecha"
-                [ngModel]="''"
+                [ngModel]="selectedDay()?.date ?? ''"
                 (ngModelChange)="selectDate($event)"
               >
                 <option value="">Elegir día</option>
@@ -139,146 +254,250 @@
                     {{ dateLabel(day.date) }} · {{ dayName(day, data) }}
                   </option>
                 }
-              </select></label
-            >
-          </div>
-          <div class="block-picker" role="group" aria-label="Bloques del itinerario">
-            @for (index of blocks(); track index) {
-              <button
-                [class.selected]="block() === index"
-                [attr.aria-pressed]="block() === index"
-                (click)="setBlock(index)"
-              >
-                Días {{ index * 7 + 1 }}–{{ Math.min((index + 1) * 7, days().length) }}
-              </button>
-            }
-          </div>
-          <div class="page-count">
-            <p>
-              Mostrando {{ block() * 7 + 1 }}–{{ Math.min((block() + 1) * 7, days().length) }} de
-              {{ days().length }} jornadas
-            </p>
-            <div>
-              <button
-                aria-label="Bloque anterior"
-                [disabled]="block() === 0"
-                (click)="setBlock(block() - 1)"
-              >
-                ←</button
-              ><button
-                aria-label="Bloque siguiente"
-                [disabled]="block() === blocks().length - 1"
-                (click)="setBlock(block() + 1)"
-              >
-                →
-              </button>
-            </div>
-          </div>
-          <div class="days">
-            @for (day of visible(); track day.id; let index = $index) {
-              <article class="day" [class.open]="openId() === day.id">
-                <button
-                  class="day-button"
-                  [attr.aria-expanded]="openId() === day.id"
-                  [attr.aria-controls]="'detail-' + day.id"
-                  (click)="toggle(day.id)"
-                >
-                  <span class="ordinal">{{ block() * 7 + index + 1 }}</span
-                  ><span class="day-date">{{ dateLabel(day.date) }}</span
-                  ><span class="day-route"
-                    ><strong>{{ dayName(day, data) }}</strong
-                    ><small>{{ kinds[day.kind] }} · {{ day.logistics.difficultyText }}</small></span
-                  ><span class="day-km">{{ distance(dayKm(day)) }}</span
-                  ><span aria-hidden="true">{{ openId() === day.id ? '−' : '+' }}</span>
-                </button>
-                @if (openId() === day.id) {
-                  <div
-                    [id]="'detail-' + day.id"
-                    role="region"
-                    [attr.aria-label]="'Detalle: ' + dayName(day, data)"
+              </select>
+            </label>
+            @if (blocks().length > 1) {
+              <div class="block-picker" role="group" aria-label="Bloques del itinerario">
+                @for (index of blocks(); track index) {
+                  <button
+                    type="button"
+                    [class.selected]="block() === index"
+                    [attr.aria-pressed]="block() === index"
+                    (click)="setBlock(index)"
                   >
-                    <app-day-detail
-                      [day]="day"
-                      [data]="data"
-                      (note)="startNote(day)"
-                      (edit)="startNote(day, $event)"
-                      (close)="openId.set(null)"
-                    />
-                  </div>
+                    {{ index * 7 + 1 }}–{{ Math.min((index + 1) * 7, days().length) }}
+                  </button>
                 }
-              </article>
+              </div>
             }
-          </div>
-        </section>
-        <aside class="side">
-          <section class="card">
-            <p class="eyebrow">Tu copia</p>
-            <h2>Guardar y llevar</h2>
-            <p class="muted">
-              Notas y kilómetros guardados en este dispositivo. Exporta una copia para llevarla al
-              teléfono.
-            </p>
-            <button class="primary full" (click)="export()">Exportar respaldo</button
-            ><label class="file-button"
-              >Restaurar respaldo<input
-                type="file"
-                accept="application/json,.json"
-                (change)="readBackup($event)"
-                [disabled]="busy()"
-            /></label>
-            <details>
-              <summary>Plan y disponibilidad</summary>
-              <p class="hint">
-                {{
-                  offlineReady()
-                    ? 'Aplicación almacenada y datos locales presentes. Falta ensayar cierre/reapertura sin señal en tu Android.'
-                    : 'Uso sin señal por comprobar. En desarrollo el caché de la aplicación está desactivado.'
-                }}
+            <div class="page-count">
+              <p>
+                Mostrando {{ block() * 7 + 1 }}–{{ Math.min((block() + 1) * 7, days().length) }} de
+                {{ days().length }} jornadas
               </p>
-              <button (click)="checkOffline()">Comprobar preparación</button
-              ><button [disabled]="busy()" (click)="previewSeed()">Revisar viaje de ejemplo</button>
-            </details>
+              <div>
+                <button
+                  type="button"
+                  aria-label="Bloque anterior"
+                  [disabled]="block() === 0"
+                  (click)="setBlock(block() - 1)"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  aria-label="Bloque siguiente"
+                  [disabled]="block() === blocks().length - 1"
+                  (click)="setBlock(block() + 1)"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+            <div class="days">
+              @for (day of visible(); track day.id; let index = $index) {
+                <article class="day" [class.open]="openId() === day.id">
+                  <button
+                    type="button"
+                    class="day-button"
+                    [attr.aria-expanded]="openId() === day.id"
+                    [attr.aria-controls]="'selected-day-detail'"
+                    [attr.aria-current]="openId() === day.id ? 'true' : null"
+                    (click)="toggle(day.id)"
+                  >
+                    <span class="day-date"
+                      ><strong>{{ dateLabel(day.date) }}</strong
+                      ><small>{{ kinds[day.kind] }}</small></span
+                    >
+                    <span class="day-route"
+                      ><strong>{{ dayName(day, data) }}</strong
+                      ><small>{{ distance(dayKm(day)) }} previstos</small></span
+                    >
+                    <svg class="day-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m9 5 7 7-7 7" />
+                    </svg>
+                  </button>
+                </article>
+              }
+            </div>
           </section>
-          <section class="card">
-            <p class="eyebrow">Por revisar</p>
-            <h2>Antes de la ruta</h2>
-            <p class="muted">
-              Comprueba transportes, alojamiento y reservas. Importar un plan no confirma su
-              disponibilidad.
-            </p>
-            <p class="hint">
-              {{ data.places.length }} localidades y candidatos conservados en tu respaldo. Catálogo
-              editable en la próxima entrega.
-            </p>
+
+          <section class="selected-column" aria-label="Jornada seleccionada">
+            @if (selectedDay(); as day) {
+              <article
+                class="selected-day"
+                id="selected-day-detail"
+                aria-labelledby="selected-day-title"
+              >
+                <div class="detail-statusline">
+                  <span
+                    ><span class="status-dot" aria-hidden="true"></span>Datos en este
+                    dispositivo</span
+                  >
+                  @if (data.trip.isDemo) {
+                    <span class="demo-label">Ejemplo ficticio</span>
+                  }
+                </div>
+                @if (!coverUnavailable()) {
+                  <img
+                    class="route-cover"
+                    src="route-cover.png"
+                    alt=""
+                    width="1200"
+                    height="280"
+                    (error)="coverUnavailable.set(true)"
+                  />
+                }
+                <header class="day-heading">
+                  <p class="eyebrow">
+                    {{ dateLabel(day.date, true) }} · Jornada {{ selectedOrdinal() }}
+                  </p>
+                  <h1 id="selected-day-title" tabindex="-1">{{ dayName(day, data) }}</h1>
+                  <p class="route-summary">
+                    {{ data.trip.name }} · {{ distance(dayKm(day)) }} previstos
+                  </p>
+                </header>
+                <div class="day-actions" aria-label="Acciones de la jornada">
+                  <button type="button" [disabled]="selectedIndex() <= 0" (click)="moveDay(-1)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg
+                    ><span>Anterior</span>
+                  </button>
+                  <button type="button" class="primary annotate-action" (click)="startNote(day)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="m4 16.5 10.8-10.8a2.1 2.1 0 0 1 3 3L7 19.5 3 21l1-4.5Z" />
+                      <path d="m13.5 7.2 3.3 3.3" /></svg
+                    ><span>Anotar este día</span>
+                  </button>
+                  <button
+                    type="button"
+                    [disabled]="selectedIndex() < 0 || selectedIndex() >= days().length - 1"
+                    (click)="moveDay(1)"
+                  >
+                    <span>Siguiente</span
+                    ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+                  </button>
+                </div>
+                <app-day-detail
+                  [day]="day"
+                  [data]="data"
+                  (note)="startNote(day)"
+                  (edit)="startNote(day, $event)"
+                  (close)="closeDetail()"
+                />
+              </article>
+            } @else {
+              <section class="selection-empty" aria-live="polite">
+                <p class="eyebrow">Jornada</p>
+                <h1>Elige una fecha</h1>
+                <p>
+                  Selecciona una jornada en el itinerario para consultar alojamiento y
+                  abastecimiento.
+                </p>
+              </section>
+            }
           </section>
-        </aside>
-      </div>
-    } @else {
-      <section class="card welcome">
-        <p class="eyebrow">Planificación y diario</p>
-        <h1>Planifica tu viaje</h1>
-        <p>Consulta etapas, guarda notas y respalda tu información.</p>
-        <div class="alert">
-          <strong>Tu información queda en este dispositivo</strong>
-          <p>
-            Prueba un viaje ficticio o importa tu archivo privado. Los archivos se leen aquí y no se
-            envían a un servidor.
-          </p>
         </div>
-        <div class="actions">
-          <button class="primary" [disabled]="busy()" (click)="previewSeed()">
-            Revisar viaje de ejemplo</button
-          ><label class="file-button"
-            >Traer un respaldo<input
-              type="file"
-              accept="application/json,.json"
-              (change)="readBackup($event)"
-              [disabled]="busy()"
-          /></label>
-        </div>
-        <p class="hint">Primera versión · tus datos quedan en este navegador.</p>
-      </section>
-    }
+      } @else if (section() === 'diary') {
+        <app-diary-view
+          [groups]="diaryGroups()"
+          [stages]="data.stages"
+          (editEntry)="editEntry($event)"
+          (openDay)="goTo('day')"
+        />
+      } @else {
+        <app-copy-view
+          [online]="online()"
+          [offlineReady]="offlineReady()"
+          [busy]="busy()"
+          [isDemo]="data.trip.isDemo ?? false"
+          [canInstall]="pwaInstall.canPromptInstall()"
+          [isInstalled]="pwaInstall.isInstalled()"
+          [isStandalone]="pwaInstall.isStandalone()"
+          [installGuidance]="installGuidance"
+          (exportBackup)="export()"
+          (restoreFile)="readBackup($event)"
+          (previewDemo)="previewSeed()"
+          (checkPreparation)="checkPreparation()"
+          (installApp)="installApp()"
+        />
+      }
+      <footer class="workspace-footer">
+        Bitácora <span>Las notas se guardan en este dispositivo.</span>
+      </footer>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Secciones principales">
+      <button
+        type="button"
+        [class.current]="section() === 'day'"
+        [attr.aria-current]="section() === 'day' ? 'page' : null"
+        (click)="goTo('day')"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m3 19 7-14 3.5 7 2-3L21 19H3Z" />
+          <path d="M10 16h.01M15 16h.01" /></svg
+        ><span>Jornada</span>
+      </button>
+      <button
+        type="button"
+        [class.current]="section() === 'itinerary'"
+        [attr.aria-current]="section() === 'itinerary' ? 'page' : null"
+        (click)="goTo('itinerary')"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+          <path d="M9 3v15m6-12v15" /></svg
+        ><span>Itinerario</span>
+      </button>
+      <button
+        type="button"
+        [class.current]="section() === 'diary'"
+        [attr.aria-current]="section() === 'diary' ? 'page' : null"
+        (click)="goTo('diary')"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M4 5.5c3.2-1.6 6-.8 8 1.3v14c-2-2.1-4.8-2.9-8-1.3v-14Zm16 0c-3.2-1.6-6-.8-8 1.3v14c2-2.1 4.8-2.9 8-1.3v-14Z"
+          /></svg
+        ><span>Diario</span>
+      </button>
+    </nav>
+  </div>
+} @else {
+  @if (error()) {
+    <div class="alert error global-alert" role="alert">{{ error() }}</div>
   }
-</main>
-<footer>Bitácora <span>Las notas se guardan en este dispositivo.</span></footer>
+  @if (message()) {
+    <div class="alert success global-alert" role="status">{{ message() }}</div>
+  }
+  <main id="main" class="single-page">
+    <section class="card welcome">
+      <p class="eyebrow">Planificación y diario</p>
+      <h1>Planifica tu viaje</h1>
+      <p>Consulta etapas, guarda notas y respalda tu información.</p>
+      <div class="alert">
+        <strong>Tu información queda en este dispositivo</strong>
+        <p>
+          Prueba un viaje ficticio o importa tu archivo privado. Los archivos se leen aquí y no se
+          envían a un servidor.
+        </p>
+      </div>
+      <div class="actions">
+        <button class="primary" type="button" [disabled]="busy()" (click)="previewSeed()">
+          Revisar viaje de ejemplo
+        </button>
+        <label class="file-button"
+          >Traer un respaldo<input
+            type="file"
+            accept="application/json,.json"
+            (change)="readBackup($event)"
+            [disabled]="busy()"
+        /></label>
+      </div>
+      <p class="hint">Primera versión · tus datos quedan en este navegador.</p>
+    </section>
+  </main>
+  <footer class="welcome-footer">
+    Bitácora <span>Las notas se guardan en este dispositivo.</span>
+  </footer>
+}

@@ -1,0 +1,83 @@
+.content-view {
+  max-width: 980px;
+  margin: auto;
+  padding: 12px 0 22px;
+}
+.view-heading {
+  margin-bottom: 22px;
+}
+.view-heading h1 {
+  margin: 0 0 8px;
+}
+.copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.copy-card {
+  padding: 20px;
+  background: var(--paper);
+}
+.copy-card h2 {
+  font-size: 1.25rem;
+  margin: 4px 0 8px;
+}
+.copy-card p:not(.eyebrow) {
+  color: var(--muted);
+}
+.copy-card button,
+.copy-card .file-button {
+  margin-top: 10px;
+}
+.copy-card .file-button {
+  width: 100%;
+}
+.copy-icon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--tint);
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+.copy-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.demo-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 2px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+.privacy-note {
+  color: var(--muted);
+}
+@media (max-width: 799px) {
+  .content-view {
+    padding: 14px 0 18px;
+  }
+  .copy-grid {
+    grid-template-columns: 1fr;
+  }
+  .copy-card {
+    padding: 18px;
+  }
+  .demo-action {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}

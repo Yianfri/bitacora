@@ -6,13 +6,21 @@
       "name": "app",
       "installMode": "prefetch",
       "resources": {
+        "files": ["/index.html", "/*.css", "/*.js", "/manifest.webmanifest", "/seed.json"]
+      }
+    },
+    {
+      "name": "images",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
         "files": [
-          "/index.html",
-          "/*.css",
-          "/*.js",
           "/brand.png",
-          "/manifest.webmanifest",
-          "/seed.json"
+          "/bitacora-icon.svg",
+          "/bitacora-icon-192.png",
+          "/bitacora-icon-512.png",
+          "/favicon.ico",
+          "/route-cover.png"
         ]
       }
     }

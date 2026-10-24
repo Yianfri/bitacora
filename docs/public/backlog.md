@@ -3,12 +3,22 @@
 ## Implementado
 
 - Angular/PWA con presentación responsive, tema claro/oscuro y movimiento reducido.
-- Estilo de cuaderno de ruta aprobado por el usuario y aplicado localmente: paleta
-  cálida, títulos con remates, marcadores de jornadas y menor peso en paneles
-  auxiliares. Detalles en [dirección visual](direccion-visual.md).
+- Diseño aprobado aplicado en Angular: superficies crema, texto carbón,
+  acento naranja quemado, tipografía sans y paisaje decorativo ficticio.
+  Escritorio con navegación lateral, índice y jornada; móvil con navegación
+  inferior y vistas Jornada, Itinerario y Diario. [Dirección visual](direccion-visual.md).
 - Demo ficticia y lectura local de un respaldo propio con revisión.
 - Itinerario por bloques de siete jornadas y un detalle abierto a la vez.
 - Crear/editar diario, kilómetros compartidos por fecha y borrador recuperable.
+- Navegación anterior/siguiente entre jornadas y bloques; diario por fecha real
+  con edición de entradas; Mi copia reúne exportación, restauración e instalación.
+- Iconos PWA de 192 y 512 px y guía de instalación; botón cuando el navegador
+  entrega el evento correspondiente. La instalación física sigue pendiente.
+- Verificación local de esta iteración: formato, lint, tipos, 23 pruebas de
+  dominio/almacenamiento, compilación sin advertencias y 9 recorridos en Edge.
+  Incluye claro/oscuro, movimiento reducido, teclado, 320/390/736/1024/1440 px,
+  borradores, edición desde Diario, restauración y recarga/escritura sin red.
+  Los eventos de instalación son simulados; no se ha instalado en un equipo físico.
 - Guardado transaccional IndexedDB; exportación y restauración con validación.
 - Pruebas de dominio, concurrencia, respaldo, teclado y recorrido offline en navegador.
 - CI remoto comprobado: formato, código, tipos, 17 pruebas de dominio, 6 recorridos
@@ -23,8 +33,7 @@
 - CI del backend y frontend aprobado para 9e3a78b: formato, compilación y 13
   pruebas de API en Linux, más los recorridos PWA y comprobación Docker existentes.
   [Ejecución aprobada](https://github.com/Yianfri/bitacora/actions/runs/38168967249).
-  Código disponible para revisión en [PR 1](https://github.com/Yianfri/bitacora/pull/1);
-  aún no fusionado en main.
+  Código incorporado a main mediante [PR 1](https://github.com/Yianfri/bitacora/pull/1).
 
 ### Correcciones de seguridad
 
@@ -53,11 +62,13 @@
 
 ## Entregas pendientes
 
-Diseño aprobado guardado en main. API implementada como servicio separado;
-integración con las pantallas pendiente.
+El concepto aprobado ya está implementado en Angular para escritorio, tablet y
+móvil. La recomendación sigue siendo web responsive y PWA instalable; APK queda
+como opción posterior. Falta probar instalación física y acceso entre dispositivos.
+API implementada como servicio separado; integración con las pantallas pendiente.
 
 1. Probar instalación, cierre/reapertura y almacenamiento en Android físico.
-2. Edición del plan y catálogo de lugares; navegación anterior/siguiente del detalle.
+2. Selector de varios viajes, creación de planes y catálogo de lugares.
 3. Ensayar mapa integrado, proveedor y comportamiento sin red.
 4. Conectar Linux, HTTPS y despliegue manual con recuperación; después automatizar.
 5. Integrar Angular con sesión y guardado/recuperación explícitos de copias remotas.
@@ -65,13 +76,20 @@ integración con las pantallas pendiente.
 
 Las decisiones y fechas personales de cada viaje permanecen fuera del repositorio.
 
-## Próxima entrega propuesta
+## Continuidad acordada
 
-Integración completa Angular → ASP.NET Core → SQLite privado: pantalla de acceso,
+Dirección de continuidad definida en la
+[decisión de arquitectura](decision-arquitectura.md): uso personal inicial,
+PWA instalable en PC y Android, trabajo offline y copias privadas explícitas.
+El diseño y el flujo PWA están implementados localmente; falta la instalación
+física. Después, conectar las pantallas con la API existente y ensayar su despliegue en Linux.
+La integración Angular → ASP.NET Core → SQLite privado incluirá pantalla de acceso,
 guardar una copia del viaje en el servidor y recuperarla desde otra sesión
 autenticada, con revisión antes de reemplazar datos locales. Contrato disponible
-en [API](api.md); distinguir guardado local, remoto y conflicto de revisión.
+en [API](api.md); distinguir guardado local, remoto y conflicto de revisión, y
+resolver edición durante envío, timeouts, cambio de cuenta y límites de tamaño.
 
-La sincronización automática y la resolución de cambios entre dispositivos serán
-una entrega posterior. El despliegue real requiere identificar el servidor Linux y
-revisar HTTPS y permisos; puede desarrollarse y probarse primero en el PC.
+La normalización para edición remota por entidad, colaboración y sincronización
+automática requiere otra entrega; el modelo actual sigue siendo de copias completas.
+El despliegue real requiere identificar el servidor Linux, revisar HTTPS/proxies,
+permisos y copias recuperables; puede desarrollarse y probarse primero en el PC.

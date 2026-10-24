@@ -1,0 +1,52 @@
+<section class="content-view diary-view" aria-labelledby="diary-title">
+  <header class="view-heading">
+    <p class="eyebrow">Recuerdos del viaje</p>
+    <h1 id="diary-title">Mi diario</h1>
+    <p class="muted">
+      Notas ordenadas por fecha real. Tus entradas y kilómetros permanecen en este dispositivo.
+    </p>
+  </header>
+  @if (groups().length === 0) {
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M4 5.5c3.2-1.6 6-.8 8 1.3v14c-2-2.1-4.8-2.9-8-1.3v-14Zm16 0c-3.2-1.6-6-.8-8 1.3v14c2-2.1 4.8-2.9 8-1.3v-14Z"
+        />
+      </svg>
+      <h2>Aún no hay entradas</h2>
+      <p>Desde una jornada puedes guardar una nota y los kilómetros reales de esa fecha.</p>
+      <button class="primary" type="button" (click)="openDay.emit()">Ver jornada</button>
+    </div>
+  } @else {
+    <div class="diary-groups">
+      @for (group of groups(); track group.date) {
+        <section class="diary-date" [attr.aria-labelledby]="'diary-date-' + group.date">
+          <header class="diary-date-heading">
+            <div>
+              <p class="eyebrow">Fecha real</p>
+              <h2 [id]="'diary-date-' + group.date">{{ dateLabel(group.date, true) }}</h2>
+            </div>
+            <p class="diary-km">
+              {{
+                group.cyclingKm === null
+                  ? 'Kilómetros sin registrar'
+                  : distance(group.cyclingKm) + ' reales'
+              }}
+            </p>
+          </header>
+          @for (entry of group.entries; track entry.id) {
+            <article class="diary-entry">
+              <div class="entry-meta">
+                <span>{{ stageName(entry) || 'Nota de viaje' }}</span>
+                <button class="text-button" type="button" (click)="editEntry.emit(entry)">
+                  Editar nota
+                </button>
+              </div>
+              <p class="note-text">{{ entry.text }}</p>
+            </article>
+          }
+        </section>
+      }
+    </div>
+  }
+</section>
