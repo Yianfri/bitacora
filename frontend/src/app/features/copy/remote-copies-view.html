@@ -8,7 +8,7 @@
     </p>
   </header>
 
-  @if (status() !== 'error') {
+  @if (status() !== 'error' && status() !== 'unavailable') {
     @if (error(); as message) {
       <div class="alert error" role="alert">{{ visibleError(message) }}</div>
     }
@@ -16,6 +16,30 @@
 
   @if (status() === 'loading') {
     <p class="session-state" role="status">Comprobando acceso…</p>
+  } @else if (status() === 'unavailable') {
+    <div class="session-card" role="status">
+      <h3>{{ online() ? 'Servidor no disponible' : 'Sin conexión' }}</h3>
+      @if (online()) {
+        <p>
+          No pudimos contactar con el servidor de copias. Puede estar apagado, ocupado o no ser
+          accesible desde esta conexión.
+        </p>
+      } @else {
+        <p>Este dispositivo está sin conexión. Las copias de la cuenta no están disponibles.</p>
+      }
+      <p>
+        Puedes seguir consultando y editando tu cuaderno local. No se enviarán cambios cuando vuelva
+        la conexión: primero comprueba el acceso y después decide si guardas una copia.
+      </p>
+      <button type="button" [disabled]="busy() || !online()" (click)="retry.emit()">
+        Volver a comprobar
+      </button>
+      @if (localTrip()) {
+        <button type="button" [disabled]="busy()" (click)="exportCurrent.emit()">
+          Descargar copia local
+        </button>
+      }
+    </div>
   } @else if (status() === 'error') {
     <div class="session-card">
       <h3>Copias de la cuenta no disponibles</h3>
@@ -275,4 +299,22 @@
     Iniciar sesión no vincula ni envía el cuaderno por sí solo. Puedes cerrar sesión; los datos
     locales permanecen en este navegador.
   </p>
+  <details class="server-help">
+    <summary>¿Qué pasa si el servidor está apagado?</summary>
+    <p>
+      El cuaderno se guarda en este navegador. Si ya preparaste Routale sin conexión, puedes abrirlo
+      y seguir anotando aunque el servidor esté apagado. La primera carga en otro navegador o
+      dispositivo necesita acceso al servidor.
+    </p>
+    <p>
+      El servidor conserva la última copia que guardaste en tu cuenta. Para llevar cambios a otro
+      dispositivo, enciende el servidor, guarda una copia desde el dispositivo donde editaste y
+      después revísala y recupérala en el otro. Conectar de nuevo no envía ni reemplaza datos por sí
+      solo.
+    </p>
+    <p>
+      También puedes descargar una copia local y restaurarla desde un archivo. Conserva ese archivo
+      en un lugar privado; los datos de este navegador no sustituyen un respaldo.
+    </p>
+  </details>
 </section>

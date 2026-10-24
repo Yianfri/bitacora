@@ -2,9 +2,12 @@
 
 Aplicación Angular/PWA para planificar viajes y llevar un diario, adaptable a PC y Android.
 
-Esta primera versión permite consultar un itinerario por bloques, abrir el detalle
+La versión actual permite consultar un itinerario por bloques, abrir el detalle
 de un día, crear y editar notas con kilómetros diarios, recuperar borradores y
 exportar/restaurar una copia completa. Incluye una **demo ficticia** para probarla.
+Mi copia conecta con una API privada para guardar y recuperar copias manualmente.
+El [estado y siguientes entregas](docs/public/backlog.md) distingue código disponible,
+funciones pendientes y comprobaciones que requieren dispositivos o servidor reales.
 
 ## Nombre y compatibilidad
 
@@ -57,6 +60,12 @@ npm run preview
 Usar un único servidor en 4200. En Android la PWA necesita HTTPS fuera de localhost.
 Instalación en teléfono físico y despliegue en servidor siguen pendientes.
 
+El cuaderno preparado funciona localmente aunque el servidor esté apagado. Para
+guardar o recuperar copias de la cuenta, o abrir Routale por primera vez en otro
+dispositivo, el servidor debe estar disponible. Mi copia permite volver a comprobar
+el acceso sin recargar y descargar un respaldo local durante una caída. Reconectar
+no envía cambios automáticamente; ver [responsabilidades](docs/public/arquitectura.md#responsabilidades-cuando-el-servidor-no-está-disponible).
+
 ## Estructura y comprobaciones
 
 - `frontend/src/app/features/`: pantallas y componentes de viaje/diario.
@@ -80,7 +89,8 @@ el cuaderno local. No hay sincronización automática.
 
 ## Ensayo local completo
 
-Después de instalar dependencias, `npm run local` desde `frontend/` compila la
+Requiere el SDK .NET 10 de `global.json` y las dependencias npm instaladas.
+`npm run local` desde `frontend/` compila la
 web y prepara la API .NET en loopback. Abre `http://localhost:4200`; SQLite, claves
 y acceso de prueba aleatorio se conservan en `.data/local-stack/`, excluido de Git.
 El archivo `access.json` es privado y solo sirve para esa instalación de prueba.

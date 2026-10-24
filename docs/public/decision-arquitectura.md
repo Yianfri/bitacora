@@ -34,8 +34,8 @@ una entrega distinta de identidad, permisos, operación y privacidad.
    y componentes; agregar responsabilidades reales, sin capas vacías.
 5. Publicar web y API bajo un mismo origen HTTPS privado: Nginx sirve Angular y
    reenvía /api. La API y la base no se publican directamente en la red exterior.
-6. Empezar con una stack Compose administrable desde el Linux existente. Su
-   identidad, capacidad, sistema y configuración reales siguen por verificar.
+6. Empezar con una stack Compose administrable desde el Linux existente. Hay un
+   inventario previo de solo lectura; falta completar permisos, acceso y recuperación.
    Tailscale Serve es la opción inicial de acceso privado, junto con autenticación
    de la aplicación. La configuración del servidor no se cambia con esta decisión.
 7. Conservar IDs y formato de respaldo, validar antes de escribir y preservar
@@ -78,7 +78,7 @@ borre los datos del sitio ni sustituye una copia fuera del dispositivo.
 
 - Solo local y exportación JSON: ya cubre el trabajo offline y seguirá siendo
   utilizable, pero traslada al usuario el paso manual de mover y proteger copias.
-- Local con copias autenticadas: elegida para la siguiente integración, porque
+- Local con copias autenticadas: implementada en Mi copia, porque
   aprovecha lo construido y permite recuperar el viaje desde otro dispositivo
   sin resolver todavía una fusión automática compleja.
 - Servidor obligatorio para leer y escribir: no satisface el uso durante viajes
@@ -278,8 +278,11 @@ Para cerrar las entregas correspondientes se comprobará:
 - Cambiar de cuenta o trasladar el origen sin mezclar viajes ni perder datos.
   Preservar campos desconocidos, fuentes y hashes en cada ida y vuelta.
 
-Esta lista es trabajo de validación pendiente; no afirma que se hayan ejecutado
-pruebas nuevas, instalado una PWA física o conectado Linux durante esta revisión.
+Los casos de concurrencia, respuesta perdida, validación y cambio de cuenta ya
+tienen pruebas automatizadas de la integración. La caída y reinicio se ensayan con
+API/SQLite de prueba. La instalación física y la restauración operativa en Linux
+siguen pendientes; consultar [estado y evidencia](backlog.md) antes de dar por
+completada una entrega. Una prueba automatizada no sustituye esos ensayos físicos.
 
 ## Fuentes primarias y referencias de código
 

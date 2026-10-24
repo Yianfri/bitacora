@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Backup, TripData } from '../../core/domain/model';
 
 export type RemoteSessionStatus =
-  'loading' | 'signedOut' | 'unbound' | 'ready' | 'blocked' | 'error';
+  'loading' | 'signedOut' | 'unbound' | 'ready' | 'blocked' | 'unavailable' | 'error';
 export type RemoteLocalStatus =
   'not-on-device' | 'not-linked' | 'current' | 'local-changes' | 'uncertain' | 'conflict';
 

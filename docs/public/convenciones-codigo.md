@@ -82,6 +82,16 @@ Antes de modificar: leer AGENTS, contrato y llamadas afectadas. Al terminar:
 actualizar documentación, revisar el diff, ejecutar comprobaciones y mantener
 datos reales fuera de Git. Cambios mediante rama y PR, sin ejecutar forks en el Linux.
 
+### Identidad de los commits
+
+La cuenta que autentica el push y los campos de autor del commit se configuran
+por separado. Al trabajar desde otro PC o entorno cloud, comprobar `git config
+--show-origin --get user.name` y `git config --show-origin --get user.email` antes
+de crear commits. Usar configuración local al repositorio para mantener el nombre
+elegido y el correo público `noreply` verificado en GitHub, sin modificar la
+configuración global del equipo. Cambiar estos valores afecta a los commits nuevos;
+los ya publicados conservan su autor e historial.
+
 Referencias: [convenciones C# de Microsoft](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions),
 [vida del DbContext](https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/),
 [lint con tipos](https://typescript-eslint.io/getting-started/typed-linting/)

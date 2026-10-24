@@ -16,7 +16,7 @@ import {
 import type { ApiTripMetadata, ApiUser } from './remote-copies-client';
 
 export type RemoteCopiesStatus =
-  'loading' | 'signedOut' | 'unbound' | 'ready' | 'blocked' | 'error';
+  'loading' | 'signedOut' | 'unbound' | 'ready' | 'blocked' | 'unavailable' | 'error';
 
 export type RemoteLocalStatus =
   'not-on-device' | 'not-linked' | 'current' | 'local-changes' | 'uncertain' | 'conflict';
@@ -142,6 +142,7 @@ export class RemoteCopiesService {
   async initialize(): Promise<void> {
     await this.execute(async () => {
       this.status.set('loading');
+      this.pending.set(null);
       const binding = await this.repository.getWorkspaceBinding(this.origin);
       this.setBinding(binding);
       const current = await this.client.initialize();
@@ -689,8 +690,14 @@ export class RemoteCopiesService {
         this.remoteCopies.set([]);
         this.pending.set(null);
       }
-      if (error instanceof RemoteNetworkError || this.status() === 'loading')
+      if (
+        error instanceof RemoteNetworkError ||
+        (error instanceof RemoteApiError && error.status >= 500)
+      ) {
+        this.status.set('unavailable');
+      } else if (this.status() === 'loading') {
         this.status.set('error');
+      }
       throw error;
     } finally {
       this.busy.set(false);

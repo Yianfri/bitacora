@@ -1,7 +1,7 @@
 # Arquitectura implementada
 
 La [decisión de arquitectura y evolución](decision-arquitectura.md) fija la
-dirección elegida para la siguiente entrega: PWA instalable, trabajo local y
+dirección elegida: PWA instalable, trabajo local y
 copias privadas en Linux. Distingue el modelo actual de las propuestas futuras,
 las relaciones de datos y los criterios para crecer. Esta página describe lo
 que está implementado; no afirma que ya exista un despliegue en Linux.
@@ -64,3 +64,29 @@ de motor requerirá migración y pruebas, no solo cambiar una cadena de conexió
 Cookie de sesión HttpOnly, antiforgery y autorización por propietario; cuentas
 creadas con comando local, sin registro abierto. Contrato en [API](api.md).
 Directorio de datos y claves privado, independiente del código y la demo.
+
+## Responsabilidades cuando el servidor no está disponible
+
+El navegador conserva el cuaderno de trabajo en IndexedDB, incluidos los cambios
+que todavía no se han enviado. La PWA preparada permite consultar y escribir
+sin red; la primera carga, instalación o preparación en otro navegador necesita
+acceso a la aplicación. Los datos de cada perfil del navegador son independientes.
+
+El servidor autentica cuentas y conserva la última copia enviada explícitamente,
+con su revisión. Apagarlo impide iniciar sesión, listar, guardar y recuperar copias,
+pero no borra datos del navegador ni del volumen persistente del servidor. La
+indisponibilidad no permite distinguir entre equipo apagado, fallo de red o servicio
+ocupado. Mi copia lo indica y mantiene la descarga de una copia local disponible.
+
+Al volver el servidor, «Volver a comprobar» revisa la sesión y el listado sin
+recargar la aplicación, subir cambios locales ni reemplazarlos. Una sesión vencida
+solicita iniciar sesión de nuevo. Si había un envío con resultado incierto, puede
+comprobar su resultado mediante lectura; no repite la escritura automáticamente.
+Después, el usuario decide si guarda una nueva copia o revisa una recuperación.
+
+Flujo entre dispositivos: editar localmente, guardar una copia con el servidor
+disponible y revisar/recuperar esa copia en el segundo dispositivo. Mientras no
+se guarde, ese segundo dispositivo solo puede recuperar la versión remota anterior.
+La exportación de archivo sigue disponible como traslado manual. Ni IndexedDB ni
+una única copia en el servidor sustituyen respaldos operativos recuperables de
+SQLite y sus claves en un destino independiente.

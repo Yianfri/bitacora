@@ -1,101 +1,151 @@
 # Estado y siguientes entregas
 
-## Implementado
+Este documento resume el estado actual del código y las próximas entregas. Los
+resultados de entregas antiguas permanecen en el historial de Git; no representan
+la cantidad actual de pruebas ni el estado del servidor personal.
 
-- Angular/PWA con presentación responsive, tema claro/oscuro y movimiento reducido.
-- Diseño aprobado aplicado en Angular: superficies crema, texto carbón,
-  acento naranja quemado, tipografía sans y paisaje decorativo ficticio.
-  Escritorio con navegación lateral, índice y jornada; móvil con navegación
-  inferior y vistas Jornada, Itinerario y Diario. [Dirección visual](direccion-visual.md).
-- Demo ficticia y lectura local de un respaldo propio con revisión.
-- Itinerario por bloques de siete jornadas y un detalle abierto a la vez.
-- Crear/editar diario, kilómetros compartidos por fecha y borrador recuperable.
-- Navegación anterior/siguiente entre jornadas y bloques; diario por fecha real
-  con edición de entradas; Mi copia reúne exportación, restauración e instalación.
-- Iconos PWA de 192 y 512 px y guía de instalación; botón cuando el navegador
-  entrega el evento correspondiente. La instalación física sigue pendiente.
-- Verificación local de esta iteración: formato, lint, tipos, 23 pruebas de
-  dominio/almacenamiento, compilación sin advertencias y 9 recorridos en Edge.
-  Incluye claro/oscuro, movimiento reducido, teclado, 320/390/736/1024/1440 px,
-  borradores, edición desde Diario, restauración y recarga/escritura sin red.
-  Los eventos de instalación son simulados; no se ha instalado en un equipo físico.
-- Guardado transaccional IndexedDB; exportación y restauración con validación.
-- Pruebas de dominio, concurrencia, respaldo, teclado y recorrido offline en navegador.
-- CI remoto comprobado: formato, código, tipos, 17 pruebas de dominio, 6 recorridos
-  en Chromium, compilación, revisión de publicación, construcción Docker y salud HTTP.
-  [Ejecución aprobada de la versión 1565bcf](https://github.com/Yianfri/routale/actions/runs/38162052646).
-- Publicación de imagen preparada y desactivada; despliegue al servidor pendiente.
-- Backend ASP.NET Core .NET 10 y SQLite: cuentas administrativas, sesiones
-  revocables, antiforgery, aislamiento por usuario, listado y guardado/recuperación
-  de copias completas con control de revisión. Angular lo consume desde Mi copia.
-- Verificación local del backend: compilación sin warnings y 13 pruebas HTTP
-  contra SQLite real, incluidos datos inválidos, concurrencia, reinicio y logout.
-- CI del backend y frontend aprobado para 9e3a78b: formato, compilación y 13
-  pruebas de API en Linux, más los recorridos PWA y comprobación Docker existentes.
-  [Ejecución aprobada](https://github.com/Yianfri/routale/actions/runs/38168967249).
-  Código incorporado a main mediante [PR 1](https://github.com/Yianfri/routale/pull/1).
+## Implementado en la aplicación
 
-### Correcciones de seguridad
+- Angular/PWA responsive para escritorio, tablet y móvil, tema claro/oscuro,
+  movimiento reducido, teclado y controles accesibles. [Dirección visual](direccion-visual.md).
+- Demo ficticia; importación y restauración de respaldos con validación y revisión.
+- Itinerario por bloques de hasta siete jornadas, consulta de alojamiento y
+  abastecimiento, navegación anterior/siguiente y selección de fecha.
+- Diario por fecha real, creación/edición de notas y kilómetros sin duplicar la
+  jornada. Borradores recuperables y guardado transaccional en IndexedDB.
+- Exportación de un respaldo completo. Formato v1, identificadores históricos,
+  extensiones, fuentes originales y hashes conservados.
+- PWA con manifiesto, iconos y caché de aplicación. Preparación sin conexión y
+  ayuda de instalación; los eventos de instalación se prueban de forma simulada.
+- Angular conectado a ASP.NET Core .NET 10 y SQLite mediante Mi copia: sesión,
+  vinculación explícita del perfil, listado, guardado y recuperación con revisión.
+- Cuotas transaccionales, autorización por propietario, antiforgery y revisión
+  condicional. Conflictos, edición entre pestañas y respuestas perdidas conservan
+  los datos y evitan confirmar un guardado remoto inexistente.
+- IndexedDB v2 con asociaciones por origen/cuenta, operaciones inciertas y archivo
+  de copias reemplazadas. El archivo existe en almacenamiento; aún no tiene una
+  pantalla para consultarlo y recuperar versiones locales anteriores.
+- Estado de servidor no disponible, reconexión manual sin recargar y descarga de
+  la copia local durante una caída. Volver a conectar no sube cambios automáticamente.
 
-- Validación de fuentes indexada una vez por operación, con límites explícitos de
-  tamaño y complejidad; formato v1, texto original y datos locales conservados.
-- Cuotas por cuenta comprobadas en la transacción de guardado, incluyendo bytes
-  UTF-8, actualizaciones y peticiones simultáneas; rechazo 409 sin cambiar la copia.
-- Herencia de cabeceras de seguridad en Nginx y CSP para impedir enmarcado.
-  CI verifica las respuestas de la imagen en HTML, navegación, PWA, salud y errores.
-- Verificación local: 23 pruebas de dominio, 15 pruebas HTTP/SQLite y 6 recorridos
-  PWA en Edge, además de formato, lint, tipos, compilación y revisión de publicación.
-  La revisión independiente del parche no encontró un bypass ni una regresión concreta.
-  El ensayo Nginx de esta corrección se ejecuta en GitHub; Docker local no está activo.
+## Preparado para ejecutar y comprobar
 
-## Mantenibilidad y preparación local
+- API por funciones y DTO separados, EF Core con LINQ, migraciones versionadas,
+  adopción del esquema anterior y rechazo de esquemas incompatibles.
+- Lanzador local y Compose de prueba: frontend, proxy, API y SQLite/claves
+  persistentes, con cuentas aleatorias privadas para la instalación de prueba.
+- Compose de producción con API sin puerto público y web en loopback por defecto.
+  La receta requiere configurar HTTPS y migraciones antes de utilizarse en Linux.
+- CI en ejecutores de GitHub: formato, lint, tipos, dominio/almacenamiento,
+  migraciones .NET, HTTP/SQLite, navegador/PWA, integración real y Docker/Nginx.
+- Publicación de imágenes web/API condicionada a `main` y
+  `ENABLE_IMAGE_PUBLISH=true`. Publicar en GHCR no despliega la aplicación.
+- La integración y su corrección de CI quedaron incorporadas mediante el
+  [PR 4](https://github.com/Yianfri/routale/pull/4), con
+  [comprobaciones aprobadas](https://github.com/Yianfri/routale/actions/runs/40127107559).
 
-- EF Core 10.0.8 con LINQ, entidades separadas, migraciones/snapshot y adopción
-  controlada del esquema previo, sin recrear sus cuentas, sesiones o copias.
-- Endpoints por función y DTO separados. Convenciones de código/comentarios,
-  formato C#, analizadores .NET y ESLint con información de tipos.
-- 18 pruebas .NET (unitarias de dominio e integración de migraciones), además de
-  15 HTTP, 23 de dominio frontend y los recorridos PWA existentes.
-- Producción requiere migraciones previas; CI comprueba modelo sin cambios pendientes.
-- Acceso privado con Tailscale Serve y actualizador pull propuestos; se retira el
-  workflow de ejecutor personal en el repositorio público. No conectados al servidor.
+La mejora de disponibilidad tiene 41 pruebas frontend, 9 recorridos PWA y 7
+recorridos de integración comprobados en Chromium del entorno de desarrollo.
+La integración usa API y SQLite temporales e incluye caída, edición y exportación
+sin conexión, reinicio y reconexión sin envío automático. Los resultados deben
+quedar reflejados también en los checks de la PR. Esto no verifica el servidor
+personal ni Android físico.
 
-## Entregas pendientes
+## Código que puede avanzar sin el servidor personal
 
-El concepto aprobado ya está implementado en Angular para escritorio, tablet y
-móvil. La recomendación sigue siendo web responsive y PWA instalable; APK queda
-como opción posterior. Falta probar instalación física y acceso entre dispositivos.
-API integrada con sesión, vinculación explícita del perfil, guardado y recuperación
-revisada. El despliegue local incluye imágenes web/API, proxy y SQLite persistente.
+| Prioridad | Entrega pendiente | Criterio para completarla |
+| --- | --- | --- |
+| 1 | Editor de jornadas y del viaje | Editar alojamiento/estado, abastecimiento, traslados, plan B y presupuesto; después agregar/modificar jornadas y etapas con validación. Hoy solo se editan notas y kilómetros reales; el plan se incorpora desde un respaldo o la demo. Conservar IDs, fuentes originales y extensiones. |
+| 2 | Sincronización automática cuando sea posible | Con la app abierta, conexión y servidor disponible, enviar cambios pendientes y comprobar cambios remotos de la cuenta vinculada. Conservar trabajo offline, detectar conflictos y no reemplazar ediciones sin revisión. Requiere una entrega específica; aún no está implementada. |
+| 3 | Selector de viajes locales | La persistencia ya conserva varios viajes; falta elegir el activo y conservar su selección sin mezclar notas, borradores ni asociaciones remotas. |
+| 4 | Catálogo editable de lugares | Crear y editar lugares y sus vínculos con jornadas, sin inventar coordenadas ni perder datos desconocidos. |
+| 5 | Consultar copias locales reemplazadas | Exponer el archivo ya conservado al recuperar, con vista previa y comprobación de ediciones concurrentes antes de restaurar. |
+| 6 | Herramientas de respaldo operativo | Respaldar y restaurar SQLite y claves consistentemente en un entorno aislado y comprobar integridad, sesión y lectura antes de utilizarlas en producción. |
 
-Verificación de la integración local: 37 pruebas frontend, 18 .NET, 17 HTTP/SQLite,
-3 del proxy y 7 recorridos de navegador contra API/SQLite reales. El ensayo Docker
-comprobó sesión, ETags, extensiones, SQLite y claves después de reiniciar la API.
-La instalación física y un nuevo CI remoto de esta entrega siguen pendientes.
+El orden es una propuesta para las próximas PR. El editor y la sincronización
+automática son objetivos solicitados, no capacidades ya entregadas. La sincronización
+necesita activación explícita por perfil/cuenta, cambios pendientes durables,
+precondiciones de revisión, recuperación de respuestas perdidas y reintentos acotados.
+Volver a tener internet no demuestra que el servidor responda. Con la app cerrada,
+una PWA no garantiza ejecutar tareas de sincronización en segundo plano.
 
-1. Probar instalación, cierre/reapertura y almacenamiento en Android físico.
-2. Selector de varios viajes, creación de planes y catálogo de lugares.
-3. Ensayar mapa integrado, proveedor y comportamiento sin red.
-4. Conectar Linux, HTTPS y despliegue manual con recuperación; después automatizar.
-5. Ensayar respaldo y restauración operativos de SQLite y claves antes de automatizar.
-6. Sincronización automática y resolución de cambios entre dispositivos.
+Mapa integrado, proveedor y disponibilidad de cartografía sin red necesitan una
+decisión explícita y otra entrega. Historial remoto de versiones, colaboración,
+gestión pública de cuentas y empaquetado nativo se priorizarán según el uso real.
 
-Las decisiones y fechas personales de cada viaje permanecen fuera del repositorio.
+## Mantenibilidad antes del editor y la sincronización
 
-## Continuidad acordada
+La revisión de responsabilidades identifica estos cambios acotados para próximas
+PR. Son pendientes de refactorización, no defectos de seguridad confirmados ni
+motivo para reescribir toda la aplicación:
 
-Dirección de continuidad definida en la
-[decisión de arquitectura](decision-arquitectura.md): uso personal inicial,
-PWA instalable en PC y Android, trabajo offline y copias privadas explícitas.
-El diseño y el flujo PWA están implementados localmente; falta la instalación
-física. Las pantallas ya están conectadas; sigue el ensayo de despliegue en Linux.
-La integración Angular → ASP.NET Core → SQLite privado incluye pantalla de acceso,
-guardar una copia del viaje en el servidor y recuperarla desde otra sesión
-autenticada, con revisión antes de reemplazar datos locales. Contrato disponible
-en [API](api.md). Se distinguen guardado local, remoto y conflicto de revisión;
-están cubiertos edición durante envío, timeouts, cambio de cuenta y límites de tamaño.
+- Unificar los tipos de estado, resumen y vista previa de copias que hoy se
+  declaran tanto en `RemoteCopiesService` como en `RemoteCopiesView`. Mantener
+  contratos compartidos independientes de Angular y de la persistencia para que
+  agregar estados no obligue a actualizar definiciones duplicadas.
+- Separar progresivamente la comparación de contenido y reconciliación de envíos
+  de la sesión y recuperación en `RemoteCopiesService`, conservando precondiciones,
+  resultados inciertos y pruebas actuales. Extraer responsabilidades al implementar
+  la sincronización; evitar capas o interfaces sin un consumidor real.
+- Separar la actividad remota del bloqueo general en `App.remoteAction` antes de
+  agregar trabajo en segundo plano. Un envío lento no debe impedir escribir y
+  guardar una nota local; probar latencia, desconexión y edición durante el envío.
+- Implementar las futuras ediciones del plan como operaciones de dominio y
+  repositorio, con una transacción y comprobación de versión local. Los componentes
+  editan formularios, no IndexedDB directamente. Probar dos pestañas, datos inválidos
+  y conservación de fuentes, extensiones y asociaciones remotas.
 
-La normalización para edición remota por entidad, colaboración y sincronización
-automática requiere otra entrega; el modelo actual sigue siendo de copias completas.
-El despliegue real requiere identificar el servidor Linux, revisar HTTPS/proxies,
-permisos y copias recuperables; puede desarrollarse y probarse primero en el PC.
+## Revisión de seguridad pendiente
+
+Programar una auditoría del repositorio antes de activar sincronización automática
+o desplegar con datos reales. Los checks aprobados y la revisión de mantenibilidad
+no constituyen una auditoría de seguridad completada. El alcance debe incluir:
+
+- Sesiones, expiración/revocación, antiforgery y aislamiento por propietario; cambio
+  de cuenta entre pestañas y origen/perfil de los datos locales.
+- Importación, límites de cuerpo/complejidad, campos desconocidos, enlaces externos
+  y renderizado de notas; archivos inválidos deben conservar el cuaderno existente.
+- Revisión condicional, cuotas, concurrencia y respuestas perdidas. La futura
+  sincronización no debe mezclar cuentas ni repetir escrituras sin comprobar estado.
+- Cookies y proxies de confianza, HTTPS, exposición de puertos, cabeceras y caché
+  de respuestas privadas en el stack integrado.
+- Dependencias npm/NuGet, acciones y contenedores, permisos CI, exclusión de datos
+  privados del build y ausencia de secretos/cuerpos personales en logs o artefactos.
+- Procedencia de imágenes, volumen/claves, permisos, respaldo y restauración. La
+  revisión del código y la revisión operativa del Linux son comprobaciones distintas.
+
+Para cerrar este pendiente se requiere un informe con alcance, evidencia,
+hallazgos validados y límites; corregir lo reportable en cambios separados y
+verificar las correcciones. No registrar recomendaciones como vulnerabilidades
+sin demostrar su alcance e impacto.
+
+## Validación pendiente en dispositivos físicos
+
+- Instalar la PWA en Windows y Android, cerrar/reabrir y probar consulta/escritura
+  sin red después de preparar la aplicación.
+- Recorrer PC → guardar copia → Android → revisar/recuperar con el mismo origen
+  HTTPS. Verificar también qué sucede con el servidor apagado y al volver.
+- Comprobar almacenamiento y exportación en esos navegadores. Una instalación
+  PWA no impide que el usuario borre los datos ni sustituye un respaldo.
+
+## Trabajo pendiente en Linux
+
+Existe un inventario previo de solo lectura; Routale todavía no está desplegada.
+La [guía de despliegue](despliegue.md) y la
+[revisión operativa](despliegue-seguro.md) describen el trabajo restante:
+
+1. Completar la revisión de acceso, firewall, permisos e ingreso HTTPS privado
+   mediante Tailscale Serve. Mantener un origen estable y Funnel desactivado.
+2. Ensayar un respaldo y una restauración de SQLite y claves en un volumen aislado.
+   Elegir destino separado, frecuencia y retención antes de guardar datos reales.
+3. Desplegar manualmente imágenes revisadas, ejecutar la migración separada y
+   comprobar salud, sesión, guardado, reinicio y recuperación desde dos dispositivos.
+4. Implementar y comprobar procedencia de imágenes, recuperación y supervisión;
+   automatizar las actualizaciones solo después de que el procedimiento manual
+   completo sea repetible. `update.sh` todavía rechaza el stack con API.
+
+El navegador es la copia de trabajo y el servidor conserva la última copia enviada
+explícitamente. Un servidor apagado no impide editar localmente, pero sí guardar o
+recuperar copias remotas y cargar la aplicación por primera vez en otro dispositivo.
+El servidor conserva una sola versión remota por viaje; incrementar su revisión no
+crea historial. Las decisiones y los datos personales permanecen fuera de Git.
