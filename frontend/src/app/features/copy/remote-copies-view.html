@@ -1,0 +1,278 @@
+<section class="remote-panel" aria-labelledby="remote-title">
+  <header class="remote-heading">
+    <p class="eyebrow">Copia fuera de este dispositivo</p>
+    <h2 id="remote-title">Copias en tu cuenta</h2>
+    <p>
+      Guarda o recupera una copia cuando tú lo decidas. Nada se envía automáticamente; el cuaderno
+      local sigue disponible sin conexión.
+    </p>
+  </header>
+
+  @if (status() !== 'error') {
+    @if (error(); as message) {
+      <div class="alert error" role="alert">{{ visibleError(message) }}</div>
+    }
+  }
+
+  @if (status() === 'loading') {
+    <p class="session-state" role="status">Comprobando acceso…</p>
+  } @else if (status() === 'error') {
+    <div class="session-card">
+      <h3>Copias de la cuenta no disponibles</h3>
+      <p>El cuaderno local sigue disponible. Comprueba la conexión y vuelve a intentar.</p>
+      <button type="button" [disabled]="busy() || !online()" (click)="retry.emit()">
+        Volver a comprobar
+      </button>
+    </div>
+  } @else if (status() === 'signedOut') {
+    <div class="session-card">
+      <h3>Iniciar sesión</h3>
+      <p>El acceso es privado. No puedes crear una cuenta desde Routale.</p>
+      <form class="login-form" (ngSubmit)="submitLogin()">
+        <label>
+          Cuenta
+          <input
+            name="username"
+            type="text"
+            autocomplete="username"
+            [(ngModel)]="usernameValue"
+            required
+            [disabled]="busy() || !online()"
+          />
+        </label>
+        <label>
+          Contraseña
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            [(ngModel)]="passwordValue"
+            required
+            [disabled]="busy() || !online()"
+          />
+        </label>
+        <button class="primary" type="submit" [disabled]="busy() || !online()">
+          {{ busy() ? 'Ingresando…' : 'Iniciar sesión' }}
+        </button>
+      </form>
+      @if (!online()) {
+        <p class="hint">Conéctate a internet para iniciar sesión o consultar copias.</p>
+      }
+    </div>
+  } @else if (status() === 'unbound') {
+    <div class="session-card">
+      <div class="account-strip">
+        <div>
+          <p class="eyebrow">Sesión iniciada</p>
+          <strong>{{ userName() }}</strong>
+        </div>
+        <button type="button" [disabled]="busy()" (click)="logout.emit()">Cerrar sesión</button>
+      </div>
+      <h3>Vincular este perfil</h3>
+      <p>
+        Antes de guardar o recuperar copias, confirma qué cuenta usará este perfil del navegador. El
+        cuaderno local permanecerá aquí y cerrar sesión no lo elimina. Para usar otra cuenta, abre
+        Routale en otro perfil del navegador.
+      </p>
+      <p>También puedes vincular un perfil vacío y recuperar aquí una copia de tu cuenta.</p>
+      <form class="binding-form" (ngSubmit)="startBinding()">
+        <label class="confirm-check">
+          <input type="checkbox" name="bindConfirm" [(ngModel)]="bindingConfirmed" />
+          <span>Vincular este perfil a la cuenta {{ userName() }}.</span>
+        </label>
+        <button class="primary" type="submit" [disabled]="busy() || !online() || !bindingConfirmed">
+          {{ busy() ? 'Vinculando…' : 'Vincular este perfil' }}
+        </button>
+      </form>
+    </div>
+  } @else if (status() === 'blocked') {
+    <div class="session-card" role="status">
+      <div class="account-strip">
+        <div>
+          <p class="eyebrow">Perfil vinculado a otra cuenta</p>
+          <strong>{{ boundUserName() }}</strong>
+        </div>
+        <button type="button" [disabled]="busy()" (click)="logout.emit()">Cerrar sesión</button>
+      </div>
+      <p>
+        Esta sesión corresponde a {{ userName() }}. Para proteger los datos locales, este perfil
+        solo puede usar la cuenta {{ boundUserName() }}. Cierra sesión y usa otro perfil del
+        navegador para entrar con otra cuenta.
+      </p>
+      <p class="hint">Tu cuaderno local sigue guardado en este dispositivo.</p>
+    </div>
+  } @else {
+    <div class="session-card">
+      <div class="account-strip">
+        <div>
+          <p class="eyebrow">Sesión privada</p>
+          <strong>{{ userName() }}</strong>
+        </div>
+        <button type="button" [disabled]="busy()" (click)="logout.emit()">Cerrar sesión</button>
+      </div>
+
+      <section class="local-copy" aria-labelledby="local-copy-title">
+        <div class="local-copy-heading">
+          <div>
+            <p class="eyebrow">Acción manual</p>
+            <h3 id="local-copy-title">Guardar el cuaderno actual</h3>
+          </div>
+          @if (localTrip()) {
+            <span class="local-name">{{ localTrip()!.trip.name }}</span>
+          }
+        </div>
+        @if (localTrip()) {
+          @if (currentRemoteCopy(); as copy) {
+            <p class="copy-status" [attr.data-state]="copy.localStatus">
+              {{ localStatusLabel(copy.localStatus) }}
+            </p>
+          } @else {
+            <p class="copy-status">Aún no hay una copia guardada de este cuaderno.</p>
+          }
+          <button
+            class="primary"
+            type="button"
+            [disabled]="busy() || !online() || !!pending() || !!saveBlockReason()"
+            (click)="saveLocalCopy()"
+          >
+            Guardar una copia en mi cuenta
+          </button>
+          @if (saveBlockReason(); as reason) {
+            <p class="hint">{{ reason }}</p>
+          }
+        } @else {
+          <p class="muted">
+            Este perfil todavía no tiene un cuaderno local. Puedes revisar y recuperar una copia de
+            tu cuenta abajo.
+          </p>
+        }
+        @if (!online()) {
+          <p class="hint">
+            Sin conexión. Tu cuaderno local está disponible, pero las copias de la cuenta no.
+          </p>
+        }
+      </section>
+
+      <section class="remote-list" aria-labelledby="remote-list-title">
+        <div class="list-heading">
+          <div>
+            <p class="eyebrow">Copias guardadas</p>
+            <h3 id="remote-list-title">En tu cuenta</h3>
+          </div>
+          <button type="button" [disabled]="busy() || !online()" (click)="refreshCopies()">
+            {{ busy() ? 'Consultando…' : 'Actualizar lista' }}
+          </button>
+        </div>
+        @if (copies().length === 0) {
+          <p class="muted">No hay copias para mostrar. Actualiza la lista o guarda tu cuaderno.</p>
+        } @else {
+          <ul class="copy-list">
+            @for (copy of copies(); track copy.id) {
+              <li>
+                <div class="copy-summary">
+                  <h4>{{ copy.name }}</h4>
+                  @if (copy.remoteAvailable === false) {
+                    <p>Sin confirmación de copia en la cuenta.</p>
+                  } @else {
+                    <p>Guardada {{ remoteDateLabel(copy.updatedAt) }}</p>
+                  }
+                  <p class="copy-status" [attr.data-state]="copy.localStatus">
+                    {{ localStatusLabel(copy.localStatus) }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  [disabled]="busy() || !online() || !!pending() || copy.remoteAvailable === false"
+                  (click)="reviewCopy(copy.id)"
+                >
+                  Revisar recuperación
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      @if (pending(); as preview) {
+        <section class="restore-review" aria-labelledby="restore-review-title">
+          <p class="eyebrow">Revisar antes de recuperar</p>
+          <h3 id="restore-review-title">{{ preview.backup.data.trip.name }}</h3>
+          <p>
+            Copia guardada {{ remoteDateLabel(preview.updatedAt) }} ·
+            {{ localDateLabel(preview.backup.data.trip.startDate) }} —
+            {{ localDateLabel(preview.backup.data.trip.endDate) }}
+          </p>
+          <dl class="backup-counts">
+            <div>
+              <dt>Jornadas del plan</dt>
+              <dd>{{ preview.backup.data.plannedDays.length }}</dd>
+            </div>
+            <div>
+              <dt>Jornadas registradas</dt>
+              <dd>{{ preview.backup.data.actualDays.length }}</dd>
+            </div>
+            <div>
+              <dt>Notas</dt>
+              <dd>{{ preview.backup.data.diaryEntries.length }}</dd>
+            </div>
+            <div>
+              <dt>Lugares</dt>
+              <dd>{{ preview.backup.data.places.length }}</dd>
+            </div>
+            <div>
+              <dt>Fuentes</dt>
+              <dd>{{ preview.backup.data.sourceSnapshots.length }}</dd>
+            </div>
+          </dl>
+          @if (preview.localName) {
+            <div class="alert warning">
+              <strong>Se reemplazará este cuaderno local</strong>
+              <p>
+                En este perfil ya existe “{{ preview.localName }}”. Al confirmar, se reemplazará con
+                la copia de la cuenta que acabas de revisar.
+              </p>
+              @if (localTrip(); as current) {
+                <p>
+                  Ahora tiene {{ current.actualDays.length }} jornadas registradas,
+                  {{ current.diaryEntries.length }} notas y {{ current.places.length }} lugares.
+                </p>
+              }
+            </div>
+          } @else if (localTrip(); as current) {
+            <div class="alert">
+              <strong>Este perfil también tiene “{{ current.trip.name }}”.</strong>
+              <p>La copia seleccionada corresponde a otro viaje y se añadirá a este perfil.</p>
+            </div>
+          } @else {
+            <p class="hint">La copia se guardará en este perfil cuando confirmes.</p>
+          }
+          <p class="hint">
+            La copia local no cambiará hasta que confirmes. Si otra pestaña edita el cuaderno
+            mientras revisas, Routale cancelará la recuperación y conservará esos cambios.
+          </p>
+          @if (localTrip()) {
+            <button type="button" [disabled]="busy()" (click)="exportCurrent.emit()">
+              Descargar copia local actual antes de recuperar
+            </button>
+          }
+          <div class="review-actions">
+            <button
+              class="primary"
+              type="button"
+              [disabled]="busy()"
+              (click)="confirmRestore.emit()"
+            >
+              {{ busy() ? 'Comprobando cambios…' : 'Confirmar recuperación' }}
+            </button>
+            <button type="button" [disabled]="busy()" (click)="cancelReview()">Cancelar</button>
+          </div>
+        </section>
+      }
+    </div>
+  }
+
+  <p class="privacy-note">
+    Iniciar sesión no vincula ni envía el cuaderno por sí solo. Puedes cerrar sesión; los datos
+    locales permanecen en este navegador.
+  </p>
+</section>

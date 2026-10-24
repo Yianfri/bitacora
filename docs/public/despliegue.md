@@ -7,10 +7,10 @@ unitarias .NET, migraciones, API sobre SQLite temporal, contenido publicable y
 la imagen Nginx con sus cabeceras reales. Publicar imágenes sigue condicionado
 a ENABLE_IMAGE_PUBLISH=true y una versión aprobada de main.
 
-La receta Docker y compose actuales sirven el frontend. La API todavía necesita
-su imagen, volumen privado y proxy del mismo origen. No se ha conectado ni
-configurado el servidor real. Tailscale está disponible en la instalación del
-usuario, pendiente de revisar versión, permisos y configuración.
+Las recetas Docker/Compose incluyen frontend, API sin puertos publicados y un
+volumen privado para SQLite y claves. El stack local está ensayado; la instalación
+Linux existente se revisa por separado, sin desplegar ni cambiar sus servicios.
+Los resultados sensibles de inventario permanecen en notas privadas.
 
 Se retira la propuesta de conectar un ejecutor self-hosted de este repositorio
 público al Linux personal. La automatización remota se implementará después de
@@ -27,19 +27,20 @@ La revisión de diseño y distribución mantiene Linux como una opción útil, s
 dependencia para trabajar sin red tras preparar la PWA. Alojar solo el frontend
 permite abrir una versión central de la aplicación; las notas siguen siendo
 copias independientes de cada navegador/dispositivo. El valor adicional para
-PC y móvil llegará al integrar guardar y recuperar copias autenticadas mediante
-la API existente. Eso tampoco equivale a sincronización automática.
+PC y móvil se obtiene guardando y recuperando copias autenticadas mediante
+la API integrada. Eso tampoco equivale a sincronización automática.
 
-Primero se propone ensayar el nuevo diseño y la integración de copias con datos
-ficticios en el PC. Después, identificar el equipo Linux real, comprobar sistema,
-arquitectura, recursos, puertos y servicios existentes, y definir persistencia de
-SQLite, claves y recuperación. Esta revisión fue documental: no se conectó al
-equipo ni se comprobó su capacidad. Tampoco se activaron servicios ni se ejecutó
-Docker remoto.
+El diseño y las copias se han ensayado con datos ficticios en el PC. También se
+identificó el Linux y se hizo un inventario autorizado de solo lectura; no se
+activaron servicios ni se ejecutó un despliegue remoto. Los hallazgos y límites
+están en [revisión de seguridad](despliegue-seguro.md); la información de acceso
+permanece fuera de Git. Falta cerrar HTTPS, permisos, procedencia y recuperación.
 
-La receta actual sigue desplegando solo frontend; completar la API, su proxy y
-sus volúmenes es trabajo pendiente. La guía pública vigente sustituye cualquier
-plan anterior de ejecutor self-hosted en el servidor personal.
+El CI prepara ambas imágenes después de las comprobaciones, incluida integración
+real de navegador/API/SQLite. Solo publica con main y ENABLE_IMAGE_PUBLISH=true;
+no despliega en Linux. Las acciones se fijan por SHA; los outputs incluyen digests,
+pero todavía falta atestación y comprobación de procedencia en el servidor.
+La guía pública vigente sustituye cualquier plan anterior de ejecutor self-hosted.
 
 ## Acceso recomendado: Tailscale Serve
 
@@ -90,21 +91,35 @@ poco después de publicar, sin credenciales de administración del Linux en GitH
 Es una propuesta pendiente de implementar y ensayar. No se afirma que exista ya
 un agente pull, verificación de procedencia ni recuperación de la API.
 
-update.sh es actualmente un ayudante manual para el frontend: descarga una imagen,
+update.sh es un ayudante manual para el frontend aislado y rechaza el stack con API:
+descarga una imagen,
 conserva .env.previous y comprueba salud. La etiqueta/digest es inmutable, pero
 su formato no demuestra procedencia ni aprobación. No usarlo como verificador de
 versiones ni como rollback de base de datos.
 
-## Ensayo Docker del frontend
+## Ensayo Docker local conjunto
 
 ```sh
 docker compose -f deploy/compose.local.yaml up --build -d
 node frontend/tools/check-http-security.mjs http://localhost:8088
+node frontend/tools/prepare-docker-local.mjs
+node frontend/tools/check-stack.mjs --restart
 ```
 
-Sirve demo ficticia en http://localhost:8088. El diario permanece en el navegador.
+Sirve la aplicación en http://localhost:8088. Importar y escribir el diario son
+operaciones locales; Mi copia permite enviar una copia explícitamente tras el login.
+El acceso de prueba aleatorio permanece en .data/docker-local/access.json, fuera de
+Git. La API Development está aislada en la red interna; solo el proxy declarado
+y loopback pasan su control. La web publica únicamente el puerto loopback.
+Detener con compose stop conserva el volumen. Nunca usar down -v para actualizar.
 Nginx conserva DENY, nosniff, Referrer-Policy y CSP frame-ancestors con
 Cache-Control no-cache en HTML y Service Worker.
+
+Antes de usar compose.yaml en Linux: elegir las dos imágenes integradas revisadas,
+preparar un volumen y claves privados, respaldar y ejecutar el comando migrate
+como paso independiente. nginx.stack.conf asume un ingreso HTTPS de confianza
+hacia el puerto loopback; no usar esa configuración directamente por HTTP público.
+Ver [revisión de seguridad](despliegue-seguro.md) y [migraciones](migraciones.md).
 
 Referencias: [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve),
 [certificados HTTPS](https://tailscale.com/docs/how-to/set-up-https-certificates),

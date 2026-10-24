@@ -102,6 +102,7 @@ function environment() {
     Storage__Directory: directory,
     Storage__MaxTripsPerUser: "3",
     Storage__MaxBackupBytesPerUser: String(1024 * 1024),
+    ReverseProxy__KnownProxies: "",
   };
 }
 async function createAccount(username) {
@@ -431,6 +432,46 @@ test("users cannot see or overwrite another owner; equal trip IDs remain isolate
     fixture.data.trip.name,
   );
 });
+test("stale workspace account is rejected after logout and login on a shared cookie", async () => {
+  const before = await second.request(route);
+  assert.equal(before.status, 200);
+  const stored = await before.json();
+  const storedEtag = before.headers.get("etag");
+
+  assert.equal(
+    (await first.request("/api/auth/logout", { method: "POST" })).status,
+    204,
+  );
+  await first.login("traveler.two");
+
+  const staleAccount = { "X-Routale-Account": "TRAVELER.ONE" };
+  const list = await first.request("/api/trips", { headers: staleAccount });
+  assert.equal(list.status, 409);
+  assert.equal((await list.json()).code, "workspace_account_mismatch");
+  const read = await first.request(route, { headers: staleAccount });
+  assert.equal(read.status, 409);
+  assert.equal((await read.json()).code, "workspace_account_mismatch");
+
+  const changed = structuredClone(stored);
+  changed.data.trip.name = "No reemplazar la copia B";
+  const write = await first.request(route, {
+    method: "PUT",
+    body: changed,
+    headers: { ...staleAccount, "If-Match": storedEtag },
+  });
+  assert.equal(write.status, 409);
+  assert.equal((await write.json()).code, "workspace_account_mismatch");
+
+  const after = await second.request(route);
+  assert.equal(after.headers.get("etag"), storedEtag);
+  assert.deepEqual(await after.json(), stored);
+
+  assert.equal(
+    (await first.request("/api/auth/logout", { method: "POST" })).status,
+    204,
+  );
+  await first.login("traveler.one");
+});
 test("concurrent updates with the same revision have one winner without losing data", async () => {
   const writes = [structuredClone(fixture), structuredClone(fixture)];
   writes[0].customMetadata.winner = "A";
@@ -620,7 +661,7 @@ test("logout revokes the saved cookie, including replay after a new process", as
   await boot();
   assert.equal((await replay.request(route)).status, 401);
 });
-test("login rate limiting rejects repeated failures", async () => {
+test("login rate limiting ignores forged forwarded IPs from an untrusted peer", async () => {
   const visitor = new Client();
   await visitor.csrf();
   const statuses = [];
@@ -630,15 +671,50 @@ test("login rate limiting rejects repeated failures", async () => {
         await visitor.request("/api/auth/login", {
           method: "POST",
           body: { username: "nonexistent", password },
+          headers: { "X-Forwarded-For": `198.51.100.${i + 1}` },
         })
       ).status,
     );
   }
   assert.equal(statuses.includes(429), true);
 });
-test("production rejects HTTP on private API routes", async () => {
+test("production ignores forwarded HTTPS headers from an untrusted peer", async () => {
   await stopped(server);
-  await boot({ ...environment(), ASPNETCORE_ENVIRONMENT: "Production" });
+  await boot({
+    ...environment(),
+    ASPNETCORE_ENVIRONMENT: "Production",
+    ReverseProxy__KnownProxies: "192.0.2.44",
+  });
   assert.equal((await second.request("/api/auth/me")).status, 400);
-  assert.equal((await second.request("/api/auth/csrf")).status, 400);
+  assert.equal(
+    (
+      await second.request("/api/auth/csrf", {
+        headers: {
+          "X-Forwarded-Proto": "https",
+          "X-Forwarded-For": "203.0.113.91",
+        },
+      })
+    ).status,
+    400,
+  );
+});
+test("production accepts forwarded HTTPS and sets Secure cookies only from a configured proxy", async () => {
+  await stopped(server);
+  await boot({
+    ...environment(),
+    ASPNETCORE_ENVIRONMENT: "Production",
+    ReverseProxy__KnownProxies: "127.0.0.1,::1,::ffff:127.0.0.1",
+  });
+  const response = await fetch(baseUrl + "/api/auth/csrf", {
+    headers: {
+      "X-Forwarded-Proto": "https",
+      "X-Forwarded-For": "203.0.113.91",
+    },
+  });
+  assert.equal(response.status, 200);
+  const csrfCookie = response
+    .headers.getSetCookie()
+    .find((value) => value.startsWith(".Bitacora.Csrf="));
+  assert.match(csrfCookie, /secure/i);
+  assert.match(csrfCookie, /httponly/i);
 });

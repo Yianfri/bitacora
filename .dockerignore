@@ -11,8 +11,14 @@ frontend/public/*
 !frontend/public/brand.png
 !frontend/public/favicon.ico
 !frontend/public/manifest.webmanifest
+!frontend/public/routale-icon.svg
+!frontend/public/routale-icon-192.png
+!frontend/public/routale-icon-512.png
+!frontend/public/route-cover.png
 **/*.local.*
 **/.env*
 !deploy/
 !deploy/nginx.conf
+!deploy/nginx.local.conf
+!deploy/nginx.stack.conf
 !Dockerfile

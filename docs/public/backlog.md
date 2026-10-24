@@ -27,7 +27,7 @@
 - Publicación de imagen preparada y desactivada; despliegue al servidor pendiente.
 - Backend ASP.NET Core .NET 10 y SQLite: cuentas administrativas, sesiones
   revocables, antiforgery, aislamiento por usuario, listado y guardado/recuperación
-  de copias completas con control de revisión. Angular todavía no lo consume.
+  de copias completas con control de revisión. Angular lo consume desde Mi copia.
 - Verificación local del backend: compilación sin warnings y 13 pruebas HTTP
   contra SQLite real, incluidos datos inválidos, concurrencia, reinicio y logout.
 - CI del backend y frontend aprobado para 9e3a78b: formato, compilación y 13
@@ -65,13 +65,19 @@
 El concepto aprobado ya está implementado en Angular para escritorio, tablet y
 móvil. La recomendación sigue siendo web responsive y PWA instalable; APK queda
 como opción posterior. Falta probar instalación física y acceso entre dispositivos.
-API implementada como servicio separado; integración con las pantallas pendiente.
+API integrada con sesión, vinculación explícita del perfil, guardado y recuperación
+revisada. El despliegue local incluye imágenes web/API, proxy y SQLite persistente.
+
+Verificación de la integración local: 37 pruebas frontend, 18 .NET, 17 HTTP/SQLite,
+3 del proxy y 7 recorridos de navegador contra API/SQLite reales. El ensayo Docker
+comprobó sesión, ETags, extensiones, SQLite y claves después de reiniciar la API.
+La instalación física y un nuevo CI remoto de esta entrega siguen pendientes.
 
 1. Probar instalación, cierre/reapertura y almacenamiento en Android físico.
 2. Selector de varios viajes, creación de planes y catálogo de lugares.
 3. Ensayar mapa integrado, proveedor y comportamiento sin red.
 4. Conectar Linux, HTTPS y despliegue manual con recuperación; después automatizar.
-5. Integrar Angular con sesión y guardado/recuperación explícitos de copias remotas.
+5. Ensayar respaldo y restauración operativos de SQLite y claves antes de automatizar.
 6. Sincronización automática y resolución de cambios entre dispositivos.
 
 Las decisiones y fechas personales de cada viaje permanecen fuera del repositorio.
@@ -82,12 +88,12 @@ Dirección de continuidad definida en la
 [decisión de arquitectura](decision-arquitectura.md): uso personal inicial,
 PWA instalable en PC y Android, trabajo offline y copias privadas explícitas.
 El diseño y el flujo PWA están implementados localmente; falta la instalación
-física. Después, conectar las pantallas con la API existente y ensayar su despliegue en Linux.
-La integración Angular → ASP.NET Core → SQLite privado incluirá pantalla de acceso,
+física. Las pantallas ya están conectadas; sigue el ensayo de despliegue en Linux.
+La integración Angular → ASP.NET Core → SQLite privado incluye pantalla de acceso,
 guardar una copia del viaje en el servidor y recuperarla desde otra sesión
 autenticada, con revisión antes de reemplazar datos locales. Contrato disponible
-en [API](api.md); distinguir guardado local, remoto y conflicto de revisión, y
-resolver edición durante envío, timeouts, cambio de cuenta y límites de tamaño.
+en [API](api.md). Se distinguen guardado local, remoto y conflicto de revisión;
+están cubiertos edición durante envío, timeouts, cambio de cuenta y límites de tamaño.
 
 La normalización para edición remota por entidad, colaboración y sincronización
 automática requiere otra entrega; el modelo actual sigue siendo de copias completas.

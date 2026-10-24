@@ -249,7 +249,9 @@ test('PWA: manifiesto e iconos reales y respuestas de instalación simuladas', a
     window.dispatchEvent(event);
   });
   await page.getByRole('button', { name: 'Instalar aplicación', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('La instalación quedó pendiente');
+  await expect(
+    page.getByRole('status').filter({ hasText: 'La instalación quedó pendiente' }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Instalar aplicación', exact: true })).toHaveCount(
     0,
   );

@@ -1,0 +1,16 @@
+**
+!src/
+!src/**
+!Bitacora.slnx
+src/**/bin/
+src/**/obj/
+src/**/.data/
+src/**/private-data/
+src/**/backups/
+src/**/keys/
+src/**/*.db
+src/**/*.db-shm
+src/**/*.db-wal
+src/**/*.sqlite*
+src/**/.env*
+src/**/*.pem

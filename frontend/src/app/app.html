@@ -405,21 +405,44 @@
           (openDay)="goTo('day')"
         />
       } @else {
-        <app-copy-view
-          [online]="online()"
-          [offlineReady]="offlineReady()"
-          [busy]="busy()"
-          [isDemo]="data.trip.isDemo ?? false"
-          [canInstall]="pwaInstall.canPromptInstall()"
-          [isInstalled]="pwaInstall.isInstalled()"
-          [isStandalone]="pwaInstall.isStandalone()"
-          [installGuidance]="installGuidance"
-          (exportBackup)="export()"
-          (restoreFile)="readBackup($event)"
-          (previewDemo)="previewSeed()"
-          (checkPreparation)="checkPreparation()"
-          (installApp)="installApp()"
-        />
+        <div class="copy-page">
+          <app-copy-view
+            [online]="online()"
+            [offlineReady]="offlineReady()"
+            [busy]="busy()"
+            [isDemo]="data.trip.isDemo ?? false"
+            [canInstall]="pwaInstall.canPromptInstall()"
+            [isInstalled]="pwaInstall.isInstalled()"
+            [isStandalone]="pwaInstall.isStandalone()"
+            [installGuidance]="installGuidance"
+            (exportBackup)="export()"
+            (restoreFile)="readBackup($event)"
+            (previewDemo)="previewSeed()"
+            (checkPreparation)="checkPreparation()"
+            (installApp)="installApp()"
+          />
+          <app-remote-copies-view
+            [status]="remoteCopies.status()"
+            [userName]="remoteCopies.user()?.username ?? null"
+            [boundUserName]="remoteCopies.workspaceBinding()?.username ?? null"
+            [localTrip]="cuaderno.data()"
+            [copies]="remoteCopies.copies()"
+            [pending]="remoteCopies.pending()"
+            [busy]="busy() || remoteCopies.busy()"
+            [online]="online()"
+            [error]="remoteCopies.error()"
+            (login)="remoteLogin($event)"
+            (logout)="remoteLogout()"
+            (bindWorkspace)="bindRemoteWorkspace()"
+            (retry)="retryRemoteSession()"
+            (refresh)="refreshRemoteCopies()"
+            (saveCurrent)="saveRemoteCopy($event)"
+            (review)="reviewRemoteCopy($event)"
+            (confirmRestore)="confirmRemoteRestore()"
+            (cancelRestore)="cancelRemoteRestore()"
+            (exportCurrent)="export()"
+          />
+        </div>
       }
       <footer class="workspace-footer">
         Routale <span>Las notas se guardan en este dispositivo.</span>
@@ -496,6 +519,27 @@
       </div>
       <p class="hint">Primera versión · tus datos quedan en este navegador.</p>
     </section>
+    <app-remote-copies-view
+      [status]="remoteCopies.status()"
+      [userName]="remoteCopies.user()?.username ?? null"
+      [boundUserName]="remoteCopies.workspaceBinding()?.username ?? null"
+      [localTrip]="cuaderno.data()"
+      [copies]="remoteCopies.copies()"
+      [pending]="remoteCopies.pending()"
+      [busy]="busy() || remoteCopies.busy()"
+      [online]="online()"
+      [error]="remoteCopies.error()"
+      (login)="remoteLogin($event)"
+      (logout)="remoteLogout()"
+      (bindWorkspace)="bindRemoteWorkspace()"
+      (retry)="retryRemoteSession()"
+      (refresh)="refreshRemoteCopies()"
+      (saveCurrent)="saveRemoteCopy($event)"
+      (review)="reviewRemoteCopy($event)"
+      (confirmRestore)="confirmRemoteRestore()"
+      (cancelRestore)="cancelRemoteRestore()"
+      (exportCurrent)="export()"
+    />
   </main>
   <footer class="welcome-footer">
     Routale <span>Las notas se guardan en este dispositivo.</span>

@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
-  testIgnore: '**/*.local.*',
+  testIgnore: ['**/*.local.*', '**/remote-copies.spec.ts'],
   fullyParallel: false,
   retries: process.env['CI'] ? 1 : 0,
   use: {

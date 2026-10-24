@@ -10,6 +10,10 @@ if [[ ! -f compose.yaml || ! -f .env ]]; then
   printf '%s\n' 'Ejecuta dentro de la stack con compose.yaml y .env preparados.' >&2
   exit 1
 fi
+if grep -Eq '^[[:space:]]{2}api:' compose.yaml; then
+  printf '%s\n' 'Este ayudante solo actualiza el frontend aislado. El stack integrado exige revisar ambas imágenes, respaldar y migrar antes de actualizar.' >&2
+  exit 1
+fi
 previous="$(sed -n 's/^BITACORA_IMAGE=//p' .env)"
 cp .env .env.previous
 # Descarga primero. Si falla, la aplicación anterior sigue funcionando.

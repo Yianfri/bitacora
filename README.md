@@ -27,7 +27,8 @@ los datos mediante exportación/restauración, como explica [privacidad](docs/pu
 
 El repositorio, las imágenes Docker y la demo contienen código y datos ficticios.
 El plan propio se importa desde un archivo JSON en el navegador. Ese archivo se lee
-localmente: no se sube a GitHub ni a una API. Plan y notas quedan en IndexedDB;
+localmente: importar no envía su contenido. Solo **Guardar una copia en mi cuenta**
+envía una copia a la API después de iniciar sesión y vincular el perfil. Plan y notas quedan en IndexedDB;
 los borradores quedan en localStorage. Los dispositivos todavía no se sincronizan.
 Las copias exportadas pueden incluir información sensible; conservarlas en privado.
 
@@ -71,11 +72,37 @@ Desde `frontend/`: `npm run format:check`, `npm run lint`, `npm run typecheck:te
 `npx playwright install chromium`; en Windows puede usarse Edge mediante
 `E2E_CHANNEL=msedge`. `npm run check:publication` revisa Git y el contenido compilado.
 
-**Backend implementado como servicio separado:** cuentas privadas, sesiones y
-guardado/recuperación de copias completas en SQLite. [Ejecutar y probar el backend](backend/README.md)
-y [contrato de endpoints](docs/public/api.md). Angular aún no está conectado a la
-API; no hay sincronización automática. El contenedor actual sirve archivos
-estáticos y su `/health` comprueba Nginx, mientras la API tiene su propia salud.
+**Frontend y backend conectados:** cuentas privadas, sesiones y copias completas
+en SQLite. Mi copia permite guardar y recuperar con revisión, control de cambios
+entre pestañas y conservación de la copia anterior. El perfil local queda vinculado
+a una cuenta; otra cuenta requiere otro perfil de navegador. Cerrar sesión conserva
+el cuaderno local. No hay sincronización automática.
+
+## Ensayo local completo
+
+Después de instalar dependencias, `npm run local` desde `frontend/` compila la
+web y prepara la API .NET en loopback. Abre `http://localhost:4200`; SQLite, claves
+y acceso de prueba aleatorio se conservan en `.data/local-stack/`, excluido de Git.
+El archivo `access.json` es privado y solo sirve para esa instalación de prueba.
+
+Con Docker Desktop iniciado, desde la raíz:
+
+```sh
+docker compose -f deploy/compose.local.yaml up --build -d --wait
+node frontend/tools/prepare-docker-local.mjs
+node frontend/tools/check-stack.mjs --restart
+```
+
+Abre `http://localhost:8088`. El acceso de prueba está en
+`.data/docker-local/access.json`; base y claves están en el volumen
+`routale_local_private_data`. No reutilizar ese acceso en producción. Para detener
+sin borrar datos: `docker compose -f deploy/compose.local.yaml stop`. No añadir `-v`.
+La API no publica puertos. `/health` comprueba Nginx y `/api/health` la API/SQLite.
+Para los recorridos reales de navegador: compilar el backend y ejecutar
+`npm run test:integration` desde frontend, con Chromium o `E2E_CHANNEL=msedge`.
+
+[Ejecutar y probar el backend](backend/README.md), [contrato](docs/public/api.md),
+[despliegue](docs/public/despliegue.md) y [revisión de seguridad](docs/public/despliegue-seguro.md).
 
 Reglas: [AGENTS.md](AGENTS.md), [frontend/AGENTS.md](frontend/AGENTS.md)
 y [backend/AGENTS.md](backend/AGENTS.md).

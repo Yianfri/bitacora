@@ -1,7 +1,7 @@
 # Contrato de la API: primera entrega
 
-ASP.NET Core .NET 10, EF Core 10 y SQLite. API separada del frontend; las pantallas todavía no la
-consumen. Copias privadas completas por usuario, sin sincronización automática.
+ASP.NET Core .NET 10, EF Core 10 y SQLite. Mi copia integra sesión y acciones
+explícitas de guardar/recuperar. Copias privadas completas por usuario, sin sincronización automática.
 El formato de respaldo v1 y los identificadores existentes se conservan.
 
 Endpoints en Features/Authentication y Features/Trips. DTO HTTP en Dtos dentro de
@@ -29,7 +29,7 @@ Enviar `X-CSRF-TOKEN` en todos los POST y PUT, incluido login. Obtener un nuevo
 token después de iniciar sesión: el token está vinculado a la identidad.
 Falta de token o token incorrecto devuelve 403. Login limitado a diez intentos
 por minuto por dirección remota; 429 al superar el límite. No habilitar CORS
-abierto. La futura integración usará el mismo origen mediante proxy.
+abierto. La integración usa el mismo origen mediante proxy.
 
 ## Copias de viajes
 
@@ -43,6 +43,13 @@ El cuerpo de PUT es el respaldo existente, sin un envoltorio nuevo. Para crear,
 enviar `If-None-Match: *`; para actualizar, `If-Match` con el ETag leído antes,
 por ejemplo `"1"`. Ambos casos necesitan sesión y token CSRF. La respuesta incluye
 ID, revisión y momento de guardado remoto, además del nuevo ETag.
+
+La integración del navegador envía `X-Routale-Account` con el nombre canónico
+de la cuenta esperada en las peticiones de copias. Es una precondición adicional:
+si la sesión compartida entre pestañas cambió de cuenta, se responde 409 con
+`code: workspace_account_mismatch` sin leer ni modificar sus copias. La cabecera
+no autentica al usuario ni sustituye la autorización por propietario. Es opcional
+para clientes existentes; el frontend la incluye siempre.
 
 Sin condición: 428. Condiciones incompatibles: 400. Copia existente al crear o
 revisión obsoleta al actualizar: 412; el contenido existente se conserva. La
@@ -71,7 +78,7 @@ caber en la cuota de bytes; nuevas copias requieren también una plaza libre.
 ## Límites de esta entrega
 
 La copia del servidor es independiente de IndexedDB. Nada del navegador se
-envía hasta integrar una acción explícita de guardado remoto. Sin borrado,
+envía hasta elegir el guardado remoto explícito. Sin borrado,
 recuperación de contraseña, registro público, edición remota por entidad ni
 fusión automática. No sustituir datos locales al recuperar sin revisión.
 

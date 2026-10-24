@@ -2,7 +2,8 @@
 
 ASP.NET Core .NET 10, EF Core 10.0.8 y SQLite. Cuentas administrativas,
 sesiones revocables y copias privadas por propietario. SDK fijado en global.json.
-Angular todavía no envía información a esta API.
+Angular consume esta API mediante acciones explícitas de Mi copia. Importar y
+guardar notas siguen siendo operaciones locales; no existe sincronización automática.
 
 ## Recorrido del código
 
@@ -53,8 +54,10 @@ dotnet run --project backend/src/Bitacora.Api --no-launch-profile
 
 create-user pide contraseña sin mostrarla. No poner contraseñas en argumentos,
 código o ejemplos. Development solo acepta loopback. Producción requiere HTTPS
-y cookies Secure; el proxy confiable y el volumen se configurarán al revisar Linux.
-Salud en /health; el frontend todavía no tiene pantalla de login.
+y cookies Secure. `ReverseProxy__KnownProxies` declara IPs exactas separadas por
+comas; sin configuración se ignoran cabeceras reenviadas. El Compose local permite
+solo el proxy declarado además de loopback. Salud en /health; Nginx la ofrece
+como /api/health. El frontend incluye acceso y vinculación explícita del perfil.
 
 Storage__Directory contiene bitacora.db y keys/ de Data Protection.
 Por defecto se usa .data bajo el directorio de contenido. En Linux se crea privado;
