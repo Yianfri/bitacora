@@ -73,6 +73,52 @@ Mapa integrado, proveedor y disponibilidad de cartografía sin red necesitan una
 decisión explícita y otra entrega. Historial remoto de versiones, colaboración,
 gestión pública de cuentas y empaquetado nativo se priorizarán según el uso real.
 
+## Mantenibilidad antes del editor y la sincronización
+
+La revisión de responsabilidades identifica estos cambios acotados para próximas
+PR. Son pendientes de refactorización, no defectos de seguridad confirmados ni
+motivo para reescribir toda la aplicación:
+
+- Unificar los tipos de estado, resumen y vista previa de copias que hoy se
+  declaran tanto en `RemoteCopiesService` como en `RemoteCopiesView`. Mantener
+  contratos compartidos independientes de Angular y de la persistencia para que
+  agregar estados no obligue a actualizar definiciones duplicadas.
+- Separar progresivamente la comparación de contenido y reconciliación de envíos
+  de la sesión y recuperación en `RemoteCopiesService`, conservando precondiciones,
+  resultados inciertos y pruebas actuales. Extraer responsabilidades al implementar
+  la sincronización; evitar capas o interfaces sin un consumidor real.
+- Separar la actividad remota del bloqueo general en `App.remoteAction` antes de
+  agregar trabajo en segundo plano. Un envío lento no debe impedir escribir y
+  guardar una nota local; probar latencia, desconexión y edición durante el envío.
+- Implementar las futuras ediciones del plan como operaciones de dominio y
+  repositorio, con una transacción y comprobación de versión local. Los componentes
+  editan formularios, no IndexedDB directamente. Probar dos pestañas, datos inválidos
+  y conservación de fuentes, extensiones y asociaciones remotas.
+
+## Revisión de seguridad pendiente
+
+Programar una auditoría del repositorio antes de activar sincronización automática
+o desplegar con datos reales. Los checks aprobados y la revisión de mantenibilidad
+no constituyen una auditoría de seguridad completada. El alcance debe incluir:
+
+- Sesiones, expiración/revocación, antiforgery y aislamiento por propietario; cambio
+  de cuenta entre pestañas y origen/perfil de los datos locales.
+- Importación, límites de cuerpo/complejidad, campos desconocidos, enlaces externos
+  y renderizado de notas; archivos inválidos deben conservar el cuaderno existente.
+- Revisión condicional, cuotas, concurrencia y respuestas perdidas. La futura
+  sincronización no debe mezclar cuentas ni repetir escrituras sin comprobar estado.
+- Cookies y proxies de confianza, HTTPS, exposición de puertos, cabeceras y caché
+  de respuestas privadas en el stack integrado.
+- Dependencias npm/NuGet, acciones y contenedores, permisos CI, exclusión de datos
+  privados del build y ausencia de secretos/cuerpos personales en logs o artefactos.
+- Procedencia de imágenes, volumen/claves, permisos, respaldo y restauración. La
+  revisión del código y la revisión operativa del Linux son comprobaciones distintas.
+
+Para cerrar este pendiente se requiere un informe con alcance, evidencia,
+hallazgos validados y límites; corregir lo reportable en cambios separados y
+verificar las correcciones. No registrar recomendaciones como vulnerabilidades
+sin demostrar su alcance e impacto.
+
 ## Validación pendiente en dispositivos físicos
 
 - Instalar la PWA en Windows y Android, cerrar/reabrir y probar consulta/escritura
